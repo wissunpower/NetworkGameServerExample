@@ -1,0 +1,27 @@
+﻿  stdafx.cpp
+d:\github\networkgameserverexample\library\stdafx.cpp : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+d:\github\networkgameserverexample\library\stdafx.h : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+d:\github\networkgameserverexample\library\targetver.h : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+  Library.cpp
+d:\github\networkgameserverexample\library\library.cpp : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+  dllmain.cpp
+d:\github\networkgameserverexample\library\dllmain.cpp : warning C4819: 현재 코드 페이지(949)에서 표시할 수 없는 문자가 파일에 들어 있습니다. 데이터가 손실되지 않게 하려면 해당 파일을 유니코드 형식으로 저장하십시오.
+  cMonitor.cpp
+d:\github\networkgameserverexample\library\cmonitor.cpp(7): warning C4273: 'cMonitor::cMonitor': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(23): note: '{ctor}'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(12): warning C4273: 'cMonitor::~cMonitor': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(24): note: '{dtor}'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(17): warning C4273: 'cMonitor::TryEnter': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(26): note: 'TryEnter'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(22): warning C4273: 'cMonitor::Enter': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(28): note: 'Enter'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(27): warning C4273: 'cMonitor::Leave': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(29): note: 'Leave'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(32): warning C4273: 'cMonitor::Owner::Owner': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(13): note: '{ctor}'의 이전 정의를 참조하십시오.
+d:\github\networkgameserverexample\library\cmonitor.cpp(38): warning C4273: 'cMonitor::Owner::~Owner': dll 링크가 일치하지 않습니다.
+  d:\github\networkgameserverexample\library\cmonitor.h(14): note: '{dtor}'의 이전 정의를 참조하십시오.
+  코드를 생성하고 있습니다...
+     D:\GitHub\NetworkGameServerExample\Debug\Library.lib 라이브러리 및 D:\GitHub\NetworkGameServerExample\Debug\Library.exp 개체를 생성하고 있습니다.
+  Library.vcxproj -> D:\GitHub\NetworkGameServerExample\Debug\Library.dll
+  Library.vcxproj -> D:\GitHub\NetworkGameServerExample\Debug\Library.pdb (Partial PDB)
