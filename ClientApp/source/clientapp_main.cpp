@@ -701,7 +701,6 @@ LRESULT CALLBACK MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, bo
 void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void * pUserContext )
 {
 	// Delegate to ProcessUserInput() function
-	_asm nop
 
 	return;
 }

@@ -5,4 +5,8 @@
 *.obj
 *.idb
 *.pdb
+*.ilk
+*.iobj
+*.ipdb
+*.vcxproj.user
 UpgradeLog*.htm
