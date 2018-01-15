@@ -9,4 +9,6 @@
 *.iobj
 *.ipdb
 *.vcxproj.user
+*.pch
+*.res
 UpgradeLog*.htm
