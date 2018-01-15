@@ -13,7 +13,6 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 	CNetMessage				tempMessage;
 	CNetMessage				tempMessage2;
 	Matchless::CClient		currentClient;
-	std::map< unsigned int, Matchless::CClient >::iterator	cIt;
 	const unsigned int		currentID = GetClientID();
 
 
@@ -50,15 +49,14 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 		memcpy( buf + bufIndex, &tempbRoomMaster, sizeof( tempbRoomMaster ) );		bufIndex += sizeof( tempbRoomMaster );
 		memcpy( buf + bufIndex, &tempCC, sizeof( tempCC ) );						bufIndex += sizeof( tempCC );
 
-		EnterCriticalSection( &g_CS );
-		for( std::map< unsigned int, Matchless::CClient >::iterator cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 		{
-			SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER,
-									bufIndex,  buf  );
+			cMonitor::Owner lock{ g_ClientListMonitor };
+			for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+			{
+				SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER, bufIndex, buf );
+			}
+			g_ClientList.insert( std::map< unsigned int, Matchless::CClient >::value_type( currentID, currentClient ) );
 		}
-		g_ClientList.insert( std::map< unsigned int, Matchless::CClient >::value_type( currentID, currentClient ) );
-		LeaveCriticalSection( &g_CS );
 
 		SendDataFSV(  currentClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_LOGIN_SUCCEED,
 								bufIndex,  buf );
@@ -71,29 +69,28 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 
 
 	// Send another client information to current client.
-	EnterCriticalSection( &g_CS );
-	for( std::map< unsigned int, Matchless::CClient >::iterator cIter = g_ClientList.begin()  ;
-			cIter != g_ClientList.end()  ;  ++cIter )
 	{
-		if( cIter->second.m_NetSystem.GetID() == currentID )
+		cMonitor::Owner lock{ g_ClientListMonitor };
+		for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 		{
-			continue;
+			if ( cIter->second.m_NetSystem.GetID() == currentID )
+			{
+				continue;
+			}
+
+			unsigned int				tempID = cIter->second.m_NetSystem.GetID();
+			unsigned short int			tempTeamNo = cIter->second.m_PlayerInfo.GetTeamNum();
+			bool						tempbRoomMaster = cIter->second.m_PlayerInfo.IsRoomMaster();
+			Matchless::ECharacterClass	tempCC = cIter->second.m_PlayerInfo.GetCharacterInfo().GetClass();
+
+			memcpy( buf, &tempID, sizeof( tempID ) );									bufIndex = sizeof( tempID );
+			memcpy( buf + bufIndex, &tempTeamNo, sizeof( tempTeamNo ) );				bufIndex += sizeof( tempTeamNo );
+			memcpy( buf + bufIndex, &tempbRoomMaster, sizeof( tempbRoomMaster ) );		bufIndex += sizeof( tempbRoomMaster );
+			memcpy( buf + bufIndex, &tempCC, sizeof( tempCC ) );						bufIndex += sizeof( tempCC );
+
+			SendDataFSV( currentClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER, bufIndex, buf );
 		}
-
-		unsigned int				tempID = cIter->second.m_NetSystem.GetID();
-		unsigned short int			tempTeamNo = cIter->second.m_PlayerInfo.GetTeamNum();
-		bool						tempbRoomMaster = cIter->second.m_PlayerInfo.IsRoomMaster();
-		Matchless::ECharacterClass	tempCC = cIter->second.m_PlayerInfo.GetCharacterInfo().GetClass();
-
-		memcpy( buf, &tempID, sizeof( tempID ) );									bufIndex = sizeof( tempID );
-		memcpy( buf + bufIndex, &tempTeamNo, sizeof( tempTeamNo ) );				bufIndex += sizeof( tempTeamNo );
-		memcpy( buf + bufIndex, &tempbRoomMaster, sizeof( tempbRoomMaster ) );		bufIndex += sizeof( tempbRoomMaster );
-		memcpy( buf + bufIndex, &tempCC, sizeof( tempCC ) );						bufIndex += sizeof( tempCC );
-
-		SendDataFSV(  currentClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER,
-								bufIndex,  buf  );
 	}
-	LeaveCriticalSection( &g_CS );
 
 
 	Matchless::EMainStepState	tempMSS;
@@ -138,19 +135,20 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 			memcpy( &tempMSS, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
 			//currentClient.m_PlayerInfo.SetMainStepState( tempMSS );
 
-			EnterCriticalSection( &g_CS );
-			if( Matchless::EMSS_Wait != currentClient.m_PlayerInfo.GetMainStepState()  &&
-				Matchless::EMSS_Wait == tempMSS )							// another step -> wait step change case.
 			{
-				ChangeTeamPlayerNum( 0, currentClient.m_PlayerInfo.GetTeamNum() );
-			}
-			else if( Matchless::EMSS_Wait == currentClient.m_PlayerInfo.GetMainStepState()  &&
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				if ( Matchless::EMSS_Wait != currentClient.m_PlayerInfo.GetMainStepState() &&
+					Matchless::EMSS_Wait == tempMSS )							// another step -> wait step change case.
+				{
+					ChangeTeamPlayerNum( 0, currentClient.m_PlayerInfo.GetTeamNum() );
+				}
+				else if ( Matchless::EMSS_Wait == currentClient.m_PlayerInfo.GetMainStepState() &&
 					Matchless::EMSS_Wait != tempMSS )						// wait step -> another step change case.
-			{
-				ChangeTeamPlayerNum( currentClient.m_PlayerInfo.GetTeamNum(), 0 );
+				{
+					ChangeTeamPlayerNum( currentClient.m_PlayerInfo.GetTeamNum(), 0 );
+				}
+				g_ClientList[currentID].m_PlayerInfo.SetMainStepState( tempMSS );
 			}
-			g_ClientList[ currentID ].m_PlayerInfo.SetMainStepState( tempMSS );
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_CHARCLASS_UPDATE:
@@ -161,17 +159,17 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 			// for reflect send
 			memcpy( buf, (void*)(&tempID), sizeof( tempID ) );										bufIndex = sizeof( tempID );
 			memcpy( buf + bufIndex, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );		bufIndex += tempMessage.GetAddDataLen();
-			EnterCriticalSection( &g_CS );
-			g_ClientList[ currentID ].m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 			{
-				if( cIt->first != currentID )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				g_ClientList[currentID].m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 				{
-					SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_CHARCLASS_UPDATE,
-											bufIndex,  buf );
+					if ( cIt->first != currentID )
+					{
+						SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_CHARCLASS_UPDATE, bufIndex, buf );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_TEAM_UPDATE:
@@ -182,74 +180,72 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 			// for reflect send
 			memcpy( buf, (void*)(&tempID), sizeof( tempID ) );										bufIndex = sizeof( tempID );
 			memcpy( buf + bufIndex, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );		bufIndex += tempMessage.GetAddDataLen();
-			EnterCriticalSection( &g_CS );
-			g_ClientList[ currentID ].m_PlayerInfo.SetTeamNum( tempTN );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 			{
-				if( cIt->first != currentID )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				g_ClientList[currentID].m_PlayerInfo.SetTeamNum( tempTN );
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 				{
-					SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_TEAM_UPDATE,
-											bufIndex,  buf );
+					if ( cIt->first != currentID )
+					{
+						SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_TEAM_UPDATE, bufIndex, buf );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_MAP_UPDATE:
-			EnterCriticalSection( &g_CS );
-			memcpy( &g_CurrentMapKind, tempMessage.GetpAddData(), sizeof( g_CurrentMapKind ) );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 			{
-				SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_MAP_UPDATE,
-										tempMessage.GetAddDataLen(),  tempMessage.GetpAddData()  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				memcpy( &g_CurrentMapKind, tempMessage.GetpAddData(), sizeof( g_CurrentMapKind ) );
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+				{
+					SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_MAP_UPDATE, tempMessage.GetAddDataLen(), tempMessage.GetpAddData() );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAMESTART_REQUEST:
-			EnterCriticalSection( &g_CS );
-			if( g_IsGameStartable )
 			{
-				std::map< unsigned short int, int >	tempTeamPlayerNum;
-				int						tempNum;
-				Matchless::SMatrix4		tempMtx;
-
-				g_IsAcceptable = false;
-
-				// Set buf data
-				Matchless::InitializeCharacterInfo( currentClient.m_PlayerInfo.GetCharacterInfo() );
-				bufIndex = 0;
-				for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				if ( g_IsGameStartable )
 				{
-					tempMtx.Reset();
+					std::map< unsigned short int, int >	tempTeamPlayerNum;
+					int						tempNum;
+					Matchless::SMatrix4		tempMtx;
 
-					tempNum = tempTeamPlayerNum[ cIt->second.m_PlayerInfo.GetTeamNum() ]++;
-					tempMtx._41 = (float)((tempNum % 3) * 300 - ((tempNum % 3 == 2 ) ? 600 : 0));
-					tempMtx._43 = (float)(((tempNum % 3) ? 1500 : 1200) * ((cIt->second.m_PlayerInfo.GetTeamNum() % 2) ? 1 : -1));
+					g_IsAcceptable = false;
 
-					Matchless::InitializeCharacterInfo( cIt->second.m_PlayerInfo.GetCharacterInfo() );
-					cIt->second.m_PlayerInfo.SetTransform( tempMtx );
-					//memcpy( buf + bufIndex, &(cIt->second), sizeof( cIt->second ) );	bufIndex += sizeof( cIt->second );
-				}
-				// Send buf data each client
-				for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
-				{
-					for( std::map< unsigned int, Matchless::CClient >::iterator cIter = g_ClientList.begin()  ;
-						 cIter != g_ClientList.end()  ;  ++cIter )
+					// Set buf data
+					Matchless::InitializeCharacterInfo( currentClient.m_PlayerInfo.GetCharacterInfo() );
+					bufIndex = 0;
+					for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 					{
-						SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_INFORM_CLIENTINFO,
-										sizeof( cIter->second ),  (char*)&(cIter->second)  );
-					}
+						tempMtx.Reset();
 
-					SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAMESTART_SUCCEED,
-									0,  NULL  );
+						tempNum = tempTeamPlayerNum[cIt->second.m_PlayerInfo.GetTeamNum()]++;
+						tempMtx._41 = (float)( ( tempNum % 3 ) * 300 - ( ( tempNum % 3 == 2 ) ? 600 : 0 ) );
+						tempMtx._43 = (float)( ( ( tempNum % 3 ) ? 1500 : 1200 ) * ( ( cIt->second.m_PlayerInfo.GetTeamNum() % 2 ) ? 1 : -1 ) );
+
+						Matchless::InitializeCharacterInfo( cIt->second.m_PlayerInfo.GetCharacterInfo() );
+						cIt->second.m_PlayerInfo.SetTransform( tempMtx );
+						//memcpy( buf + bufIndex, &(cIt->second), sizeof( cIt->second ) );	bufIndex += sizeof( cIt->second );
+					}
+					// Send buf data each client
+					for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+					{
+						for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+						{
+							SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_INFORM_CLIENTINFO, sizeof( cIter->second ), ( char* )&( cIter->second ) );
+						}
+
+						SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMESTART_SUCCEED, 0, NULL );
+					}
+				}
+				else
+				{
+					SendDataFSV( currentClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMESTART_FAILED, 0, NULL );
 				}
 			}
-			else
-			{
-				SendDataFSV( currentClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMESTART_FAILED, 0, NULL );
-			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAME_MOVE_POSITION:
@@ -260,27 +256,25 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 			// for reflect send
 			memcpy( buf, (void*)(&tempID), sizeof( tempID ) );
 			memcpy( buf + sizeof( tempID ), tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
-			EnterCriticalSection( &g_CS );
-			if( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
-				LeaveCriticalSection( &g_CS );
-				break;
-			}
-			if( IsNowCasting( tempID, true ) )
-			{
-				SendDataFSV(  g_ClientList[ tempID ].m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CANCEL,
-										0,  NULL  );
-			}
-			g_ClientList[ tempID ].m_PlayerInfo.SetTransform( tempMatrix );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
-			{
-				if( cIt->first != currentID )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 				{
-					SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_MOVE_POSITION,
-											sizeof( tempID ) + tempMessage.GetAddDataLen(),  buf );
+					break;
+				}
+				if ( IsNowCasting( tempID, true ) )
+				{
+					SendDataFSV( g_ClientList[tempID].m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_CANCEL, 0, NULL );
+				}
+				g_ClientList[ tempID ].m_PlayerInfo.SetTransform( tempMatrix );
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+				{
+					if ( cIt->first != currentID )
+					{
+						SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_MOVE_POSITION, sizeof( tempID ) + tempMessage.GetAddDataLen(), buf );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAME_MOVE_ANIMATION:
@@ -288,68 +282,68 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 			// for reflect send
 			memcpy( buf, (void*)(&tempID), sizeof( tempID ) );
 			memcpy( buf + sizeof( tempID ), tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
-			EnterCriticalSection( &g_CS );
-			if( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
-				LeaveCriticalSection( &g_CS );
-				break;
-			}
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
-			{
-				if( cIt->first != currentID )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 				{
-					SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_MOVE_ANIMATION,
-											sizeof( tempID ) + tempMessage.GetAddDataLen(),  buf );
+					break;
+				}
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+				{
+					if ( cIt->first != currentID )
+					{
+						SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_MOVE_ANIMATION, sizeof( tempID ) + tempMessage.GetAddDataLen(), buf );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAME_MOVE_ALL_REQUEST:
-			EnterCriticalSection( &g_CS );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 			{
-				if( cIt->first != currentID )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 				{
-					memcpy( buf, (void*)(&cIt->first), sizeof( cIt->first ) );
-					memcpy( buf + sizeof( cIt->first ), &(cIt->second.m_PlayerInfo.GetTransform()), sizeof( cIt->second.m_PlayerInfo.GetTransform() ) );
-					SendDataFSV(  currentClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_MOVE_POSITION,
-											sizeof( cIt->first ) + sizeof( cIt->second.m_PlayerInfo.GetTransform() ),  buf );
+					if ( cIt->first != currentID )
+					{
+						memcpy( buf, (void*)( &cIt->first ), sizeof( cIt->first ) );
+						memcpy( buf + sizeof( cIt->first ), &( cIt->second.m_PlayerInfo.GetTransform() ), sizeof( cIt->second.m_PlayerInfo.GetTransform() ) );
+						SendDataFSV( currentClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_MOVE_POSITION, sizeof( cIt->first ) + sizeof( cIt->second.m_PlayerInfo.GetTransform() ), buf );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAME_SKILL_REQUEST:
 			memcpy( &tempECS, tempMessage.GetpAddData(), sizeof( tempECS ) );
 			memcpy( &tempTargetID, tempMessage.GetpAddData() + sizeof( tempECS ), sizeof( tempTargetID ) );
-			EnterCriticalSection( &g_CS );
-			if( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
-				LeaveCriticalSection( &g_CS );
-				break;
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+				{
+					break;
+				}
+				if ( g_ClientList.end() != g_ClientList.find( tempTargetID ) &&
+					g_ClientList.end() != g_ClientList.find( currentID ) &&
+					!IsNowCasting( tempID, false ) )
+				{
+					HandleSkillRequest( true, tempECS, g_ClientList[currentID], g_ClientList[tempTargetID] );
+				}
+				else
+				{
+					SendDataFSV( g_ClientList[currentID].m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+				}
 			}
-			if( g_ClientList.end() != g_ClientList.find( tempTargetID )  &&
-				g_ClientList.end() != g_ClientList.find( currentID )  &&
-				!IsNowCasting( tempID, false ) )
-			{
-				HandleSkillRequest( true, tempECS, g_ClientList[ currentID ], g_ClientList[ tempTargetID ] );
-			}
-			else
-			{
-				SendDataFSV( g_ClientList[ currentID ].m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
-			}
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		case Matchless::FCTS_GAMEOUT_REQUEST:
-			EnterCriticalSection( &g_CS );
-			for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 			{
-				SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+				{
+					SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+				}
+				g_IsAcceptable = true;
 			}
-			g_IsAcceptable = true;
-			LeaveCriticalSection( &g_CS );
 			break;
 
 		}
@@ -357,24 +351,24 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 
 
 	// Handle client disconnect.
-	EnterCriticalSection( &g_CS );
-	g_ClientList.erase( tempID = currentID );
-	for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 	{
-		if( currentClient.m_PlayerInfo.IsRoomMaster()  &&  !g_IsAcceptable )
+		cMonitor::Owner lock{ g_ClientListMonitor };
+		g_ClientList.erase( tempID = currentID );
+		for ( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 		{
-			SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
-		}
+			if ( currentClient.m_PlayerInfo.IsRoomMaster() && !g_IsAcceptable )
+			{
+				SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+			}
 
-		SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_LEAVE,
-								sizeof( tempID ),  (char*)&tempID  );
+			SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_INFORM_ANOTHERCLIENT_LEAVE, sizeof( tempID ), (char*)&tempID );
+		}
+		if ( currentClient.m_PlayerInfo.IsRoomMaster() && !g_IsAcceptable )
+		{
+			g_IsAcceptable = true;
+		}
+		ReturnClientID( currentID );
 	}
-	if( currentClient.m_PlayerInfo.IsRoomMaster()  &&  !g_IsAcceptable )
-	{
-		g_IsAcceptable = true;
-	}
-	ReturnClientID( currentID );
-	LeaveCriticalSection( &g_CS );
 
 	printf( "[ Disconnect client ] : IP address = %s, port number = %d\n", inet_ntoa( clientaddr.sin_addr ), ntohs( clientaddr.sin_port ) );
 
@@ -393,9 +387,6 @@ int main( int argc, char * argv[] )
 	WSADATA		wsa;
 	if( 0 != WSAStartup( MAKEWORD( 2, 2 ), &wsa ) )
 		return -1;
-
-
-	InitializeCriticalSection( &g_CS );
 
 
 	// create timer thread step
@@ -466,16 +457,16 @@ int main( int argc, char * argv[] )
 			continue;
 		}
 
-		EnterCriticalSection( &g_CS );
-		if( !g_IsAcceptable )			// Already start the game.
 		{
-			LeaveCriticalSection( &g_CS );
-			SendDataFSV( clientSocket, 0, (unsigned int)Matchless::FSTC_LOGIN_FAILED, 0, NULL );
-			printf( "[ Error ] : Already start the game.\n" );
-			closesocket( clientSocket );
-			continue;
+			cMonitor::Owner lock{ g_ClientListMonitor };
+			if ( !g_IsAcceptable )			// Already start the game.
+			{
+				SendDataFSV( clientSocket, 0, (unsigned int)Matchless::FSTC_LOGIN_FAILED, 0, NULL );
+				printf( "[ Error ] : Already start the game.\n" );
+				closesocket( clientSocket );
+				continue;
+			}
 		}
-		LeaveCriticalSection( &g_CS );
 
 		// create thread step
 		if( NULL == CreateThread( NULL, 0, ProcessClient, (LPVOID)clientSocket, 0, &ThreadID ) )
@@ -487,9 +478,6 @@ int main( int argc, char * argv[] )
 
 
 	closesocket( listenSocket );
-
-
-	DeleteCriticalSection( &g_CS );
 
 
 	WSACleanup();

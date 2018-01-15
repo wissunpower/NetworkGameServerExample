@@ -5,13 +5,12 @@
 
 
 
-CRITICAL_SECTION								g_CS;
-
 MatchlessServer::CTimer							g_Timer( 60 );
 
 std::list< unsigned int >						g_ReuseClientIDlist;
 unsigned int									g_LargestClientID = 0;
 std::map< unsigned int, Matchless::CClient >	g_ClientList;			// < ID, SOCKET >
+cMonitor										g_ClientListMonitor;
 std::map< unsigned short int, int >				g_TeamPlayerNumMap;
 bool											g_IsGameStartable = false;
 bool											g_IsAcceptable = true;
@@ -32,14 +31,13 @@ DWORD WINAPI TimerThread( LPVOID arg )
 	{
 		Sleep( 1 );
 
-		EnterCriticalSection( &g_CS );
+		cMonitor::Owner lock{ g_ClientListMonitor };
 		g_Timer.Advance();
 		currentTick = g_Timer.GetTick();
 		isWakeUp = g_Timer.IsWakeUp();
 
 		if( !isWakeUp )
 		{
-			LeaveCriticalSection( &g_CS );
 			continue;
 		}
 
@@ -60,7 +58,6 @@ DWORD WINAPI TimerThread( LPVOID arg )
 									g_ClientList[ smIter->second.m_Caster ],  g_ClientList[ smIter->second.m_Target ]  );
 			g_SkillMessageList.erase( smIter );
 		}
-		LeaveCriticalSection( &g_CS );
 	}
 
 
@@ -73,9 +70,6 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 	unsigned int	currentTick = 0;
 	bool			isWakeUp = false;
 
-	std::map< unsigned int, Matchless::CClient >::iterator	cIter;
-	std::list< Matchless::CState >::iterator				csIter;
-	std::list< Matchless::CState >::iterator				currentCSIter;
 	CNetMessage					tempMessage;
 	char						buf[ BUFSIZE + 1 ];
 	unsigned int				bufIndex;
@@ -88,10 +82,11 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 	{
 		Sleep( 1 );
 
-		EnterCriticalSection( &g_CS );
-		currentTick = g_Timer.GetTick();
-		isWakeUp = g_Timer.IsWakeUp();
-		LeaveCriticalSection( &g_CS );
+		{
+			cMonitor::Owner lock{ g_ClientListMonitor };
+			currentTick = g_Timer.GetTick();
+			isWakeUp = g_Timer.IsWakeUp();
+		}
 
 		if( g_IsAcceptable || !isWakeUp )
 		{
@@ -103,14 +98,14 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 			printf( "Game Process Thread Run\n" );
 		}
 
-		EnterCriticalSection( &g_CS );
-		for( cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+		cMonitor::Owner lock{ g_ClientListMonitor };
+		for( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 		{
 			// remove expired effect
-			csIter = cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().begin();
+			auto csIter = cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().begin();
 			while( csIter != cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().end() )
 			{
-				currentCSIter = csIter;
+				auto currentCSIter = csIter;
 				++csIter;
 
 				if( currentCSIter->GetRemoveTime() <= currentTick )
@@ -125,12 +120,9 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 					memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
 					memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
 
-					for( std::map< unsigned int, Matchless::CClient >::iterator	cIter1 = g_ClientList.begin()  ;
-						cIter1 != g_ClientList.end()  ;  ++cIter1 )
+					for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 					{
-
-						SendDataFSV(  cIter1->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-							bufIndex,  buf  );
+						SendDataFSV( cIter1->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
 					}
 				}
 			}
@@ -151,16 +143,12 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
 				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
 
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter1 = g_ClientList.begin()  ;
-					cIter1 != g_ClientList.end()  ;  ++cIter1 )
+				for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 				{
-
-					SendDataFSV(  cIter1->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						bufIndex,  buf  );
+					SendDataFSV( cIter1->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
 				}
 			}
 		}
-		LeaveCriticalSection( &g_CS );
 	}
 
 
@@ -174,7 +162,7 @@ unsigned int GetClientID( void )
 {
 	unsigned int	returnValue;
 
-	EnterCriticalSection( &g_CS );
+	cMonitor::Owner lock{ g_ClientListMonitor };
 	if( !g_ReuseClientIDlist.empty() )
 	{
 		returnValue = (*g_ReuseClientIDlist.begin());
@@ -184,7 +172,6 @@ unsigned int GetClientID( void )
 	{
 		returnValue = (++g_LargestClientID);
 	}
-	LeaveCriticalSection( &g_CS );
 
 	return	returnValue;
 }
@@ -194,13 +181,12 @@ int ReturnClientID( const unsigned int aID )
 {
 	if( 0 == aID )
 	{
-		return	(-1);
+		return ( -1 );
 	}
 	else
 	{
-		EnterCriticalSection( &g_CS );
+		cMonitor::Owner lock{ g_ClientListMonitor };
 		g_ReuseClientIDlist.push_back( aID );
-		LeaveCriticalSection( &g_CS );
 	}
 
 	return 0;
@@ -243,11 +229,10 @@ int OutputServerInitialInfo( const SOCKADDR_IN & aAddrInfo, const SOCKET aListen
 
 bool DoNeedRoomMaster( void )
 {
-	bool		returnValue = true;
-	std::map< unsigned int, Matchless::CClient >::iterator	cIt;
+	bool returnValue = true;
 
-	EnterCriticalSection( &g_CS );
-	for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+	cMonitor::Owner lock{ g_ClientListMonitor };
+	for( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 	{
 		if( cIt->second.m_PlayerInfo.IsRoomMaster() )
 		{
@@ -255,7 +240,6 @@ bool DoNeedRoomMaster( void )
 			break;
 		}
 	}
-	LeaveCriticalSection( &g_CS );
 
 	return	returnValue;
 }
@@ -265,13 +249,11 @@ bool DoNeedRoomMaster( void )
 // if aAfter is 0, than occur remove player.
 int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short int aAfter )
 {
-	std::map< unsigned int, Matchless::CClient >::iterator	cIt;
-	std::map< unsigned short int, int >::iterator			tpIt;
 	int				prevNum = 0;
 	CNetMessage		tempMessage;
 
 
-	EnterCriticalSection( &g_CS );
+	cMonitor::Owner lock{ g_ClientListMonitor };
 	
 	// Update g_TeamPlayerNumMap
 	--g_TeamPlayerNumMap[ aBefore ];
@@ -286,7 +268,7 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 	else
 	{
 		prevNum = g_TeamPlayerNumMap.begin()->second;
-		for( tpIt = g_TeamPlayerNumMap.begin() ; tpIt != g_TeamPlayerNumMap.end() ; ++tpIt )
+		for( auto tpIt = g_TeamPlayerNumMap.begin() ; tpIt != g_TeamPlayerNumMap.end() ; ++tpIt )
 		{
 			if( prevNum != tpIt->second )
 			{
@@ -299,7 +281,8 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 	}
 
 	// send startable update data to room master client
-	for( cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
+	auto cIt = g_ClientList.begin();
+	for( ; cIt != g_ClientList.end() ; ++cIt )
 	{
 		if( cIt->second.m_PlayerInfo.IsRoomMaster() )
 		{
@@ -309,12 +292,8 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 	if( g_ClientList.end() != cIt )
 	{
 		/* temporary code for dev. */g_IsGameStartable = true;
-		SendDataFSV(  cIt->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_STARTABLE,
-								sizeof( g_IsGameStartable ),  (char*)&g_IsGameStartable  );
+		SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_STARTABLE, sizeof( g_IsGameStartable ), (char*)&g_IsGameStartable );
 	}
-
-	LeaveCriticalSection( &g_CS );
-
 
 	return 0;
 }
@@ -322,36 +301,34 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 
 bool IsGameFinish( void )
 {
-	std::map< unsigned int, Matchless::CClient >::iterator	cIter;
-	std::map< unsigned short int, int >::iterator			tmIter;
-	std::map< unsigned short int, bool >					tempRecord;			// < Team Number, IsAlive >
-	std::map< unsigned short int, bool >::iterator			rIter;
-	unsigned int											tempAliveTeamCount = 0;
+	std::map< unsigned short int, bool >	tempRecord;			// < Team Number, IsAlive >
+	unsigned int							tempAliveTeamCount = 0;
 
 
-	EnterCriticalSection( &g_CS );
-	for( tmIter = g_TeamPlayerNumMap.begin() ; tmIter != g_TeamPlayerNumMap.end() ; ++tmIter )
 	{
-		tempRecord[ tmIter->first ] = false;
+		cMonitor::Owner lock{ g_ClientListMonitor };
+		for ( auto tmIter = g_TeamPlayerNumMap.begin() ; tmIter != g_TeamPlayerNumMap.end() ; ++tmIter )
+		{
+			tempRecord[ tmIter->first ] = false;
+		}
+
+
+		for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+		{
+			if ( true == tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] )
+			{
+				continue;
+			}
+
+			if ( 0 < cIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+			{
+				tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] = true;
+			}
+		}
 	}
 
 
-	for( cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
-	{
-		if( true == tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] )
-		{
-			continue;
-		}
-
-		if( 0 < cIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
-		{
-			tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] = true;
-		}
-	}
-	LeaveCriticalSection( &g_CS );
-
-
-	for( rIter = tempRecord.begin() ; rIter != tempRecord.end() ; ++rIter )
+	for( auto rIter = tempRecord.begin() ; rIter != tempRecord.end() ; ++rIter )
 	{
 		if( true == rIter->second )
 		{
@@ -378,9 +355,6 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 	Matchless::ECharDataType	tempCDT;
 	unsigned int				tempAmount;
 
-	std::map< unsigned int, MatchlessServer::SkillMessageInfo >::iterator	smIter;
-	std::map< unsigned int, MatchlessServer::SkillMessageInfo >::iterator	currentSMIter;
-
 
 	if( 0 == casterID || 0 == targetID )
 	{
@@ -406,14 +380,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
@@ -421,22 +394,21 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
 			memcpy( buf + bufIndex, &tempHealth, sizeof( tempHealth ) );		bufIndex += sizeof( tempHealth );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					bufIndex,  buf  );
-				if( tempIsGameFinish )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					if ( tempIsGameFinish )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					}
+				}
+				if ( tempIsGameFinish )
+				{
+					g_IsAcceptable = true;
 				}
 			}
-			if( tempIsGameFinish )
-			{
-				g_IsAcceptable = true;
-			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -456,14 +428,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
@@ -478,25 +449,23 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					bufIndex,  buf  );
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
-
-				if( tempIsGameFinish )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+
+					if ( tempIsGameFinish )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					}
+				}
+				if ( tempIsGameFinish )
+				{
+					g_IsAcceptable = true;
 				}
 			}
-			if( tempIsGameFinish )
-			{
-				g_IsAcceptable = true;
-			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -516,30 +485,29 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Faint, g_Timer.GetTick() + g_Timer.GetFPS() * 3, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
-			}
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Faint, g_Timer.GetTick() + g_Timer.GetFPS() * 3, 0 );
 
-			// cancel target's casting
-			SendDataFSV(  aTarget.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CANCEL, 0, NULL );
-			smIter = g_SkillMessageList.begin();
-			while( smIter != g_SkillMessageList.end() )
-			{
-				currentSMIter = smIter;
-				++smIter;
-
-				if( targetID == currentSMIter->second.m_Caster )
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					g_SkillMessageList.erase( currentSMIter );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
+
+				// cancel target's casting
+				SendDataFSV( aTarget.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_CANCEL, 0, NULL );
+				auto smIter = g_SkillMessageList.begin();
+				while ( smIter != g_SkillMessageList.end() )
+				{
+					auto currentSMIter = smIter;
+					++smIter;
+
+					if ( targetID == currentSMIter->second.m_Caster )
+					{
+						g_SkillMessageList.erase( currentSMIter );
+					}
 				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
@@ -554,25 +522,23 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					bufIndex,  buf  );
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
-
-				if( tempIsGameFinish )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+
+					if ( tempIsGameFinish )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					}
+				}
+				if ( tempIsGameFinish )
+				{
+					g_IsAcceptable = true;
 				}
 			}
-			if( tempIsGameFinish )
-			{
-				g_IsAcceptable = true;
-			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -590,16 +556,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyArmDec, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyArmDec, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -608,14 +573,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -633,16 +597,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -651,14 +614,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -676,16 +638,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Silence, g_Timer.GetTick() + g_Timer.GetFPS() * 8, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Silence, g_Timer.GetTick() + g_Timer.GetFPS() * 8, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -694,14 +655,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -719,16 +679,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyArmInc, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyArmInc, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -737,14 +696,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -762,16 +720,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_MagArmInc, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_MagArmInc, g_Timer.GetTick() + g_Timer.GetFPS() * 30, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -780,14 +737,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -805,17 +761,16 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 20, 0 );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_MagDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 20, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_PhyDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 20, 0 );
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_MagDamDec, g_Timer.GetTick() + g_Timer.GetFPS() * 20, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -830,17 +785,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
 			memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
-
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -860,14 +812,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
@@ -882,25 +833,23 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					bufIndex,  buf  );
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
-
-				if( tempIsGameFinish )
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+
+					if ( tempIsGameFinish )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+					}
+				}
+				if ( tempIsGameFinish )
+				{
+					g_IsAcceptable = true;
 				}
 			}
-			if( tempIsGameFinish )
-			{
-				g_IsAcceptable = true;
-			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -923,9 +872,10 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
 										sizeof( tempCastTime ),  (char*)&tempCastTime  );
 
-				EnterCriticalSection( &g_CS );
-				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
-				LeaveCriticalSection( &g_CS );
+				{
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
+				}
 			}
 			else
 			{
@@ -939,14 +889,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-						bufIndex,  buf  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
@@ -960,26 +909,23 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						bufIndex,  buf  );
-
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						buf1Index,  buf1  );
-
-					if( tempIsGameFinish )
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+
+						if ( tempIsGameFinish )
+						{
+							SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						}
+					}
+					if ( tempIsGameFinish )
+					{
+						g_IsAcceptable = true;
 					}
 				}
-				if( tempIsGameFinish )
-				{
-					g_IsAcceptable = true;
-				}
-				LeaveCriticalSection( &g_CS );
 			}
 		}
 		else
@@ -1003,9 +949,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
 										sizeof( tempCastTime ),  (char*)&tempCastTime  );
 
-				EnterCriticalSection( &g_CS );
+				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
-				LeaveCriticalSection( &g_CS );
 			}
 			else
 			{
@@ -1019,14 +964,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-						bufIndex,  buf  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
@@ -1040,26 +984,23 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						bufIndex,  buf  );
-
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						buf1Index,  buf1  );
-
-					if( tempIsGameFinish )
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+
+						if ( tempIsGameFinish )
+						{
+							SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						}
+					}
+					if ( tempIsGameFinish )
+					{
+						g_IsAcceptable = true;
 					}
 				}
-				if( tempIsGameFinish )
-				{
-					g_IsAcceptable = true;
-				}
-				LeaveCriticalSection( &g_CS );
 			}
 		}
 		else
@@ -1078,16 +1019,15 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-			EnterCriticalSection( &g_CS );
-			aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Perfect, g_Timer.GetTick() + g_Timer.GetFPS() * 8, 0 );
-
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-					bufIndex,  buf  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				aTarget.m_PlayerInfo.GetCharacterInfo().AddState( Matchless::EST_Perfect, g_Timer.GetTick() + g_Timer.GetFPS() * 8, 0 );
+
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
@@ -1096,14 +1036,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-			EnterCriticalSection( &g_CS );
-			for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-				cIter != g_ClientList.end()  ;  ++cIter )
 			{
-				SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-					buf1Index,  buf1  );
+				cMonitor::Owner lock{ g_ClientListMonitor };
+				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+				{
+					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+				}
 			}
-			LeaveCriticalSection( &g_CS );
 		}
 		else
 		{
@@ -1126,9 +1065,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
 										sizeof( tempCastTime ),  (char*)&tempCastTime  );
 
-				EnterCriticalSection( &g_CS );
+				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
-				LeaveCriticalSection( &g_CS );
 			}
 			else
 			{
@@ -1141,14 +1079,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-						bufIndex,  buf  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
@@ -1162,17 +1099,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						bufIndex,  buf  );
-
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						buf1Index,  buf1  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 			}
 		}
 		else
@@ -1196,9 +1130,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
 										sizeof( tempCastTime ),  (char*)&tempCastTime  );
 
-				EnterCriticalSection( &g_CS );
+				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
-				LeaveCriticalSection( &g_CS );
 			}
 			else
 			{
@@ -1211,14 +1144,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
 				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY,
-						bufIndex,  buf  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
@@ -1232,17 +1164,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
 				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
 
-				EnterCriticalSection( &g_CS );
-				for( std::map< unsigned int, Matchless::CClient >::iterator	cIter = g_ClientList.begin()  ;
-					cIter != g_ClientList.end()  ;  ++cIter )
 				{
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						bufIndex,  buf  );
-
-					SendDataFSV(  cIter->second.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE,
-						buf1Index,  buf1  );
+					cMonitor::Owner lock{ g_ClientListMonitor };
+					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
+					{
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					}
 				}
-				LeaveCriticalSection( &g_CS );
 			}
 		}
 		else
@@ -1261,11 +1190,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 bool IsNowCasting( const unsigned int aID, const bool aIsCancel )
 {
 	bool	returnValue = false;
-	std::map< unsigned int, MatchlessServer::SkillMessageInfo >::iterator	smIter;
 
+	cMonitor::Owner lock{ g_ClientListMonitor };
 
-	EnterCriticalSection( &g_CS );
-	for( smIter = g_SkillMessageList.begin() ; smIter != g_SkillMessageList.end() ; ++smIter )
+	auto smIter = g_SkillMessageList.begin();
+	for( ; smIter != g_SkillMessageList.end() ; ++smIter )
 	{
 		if( aID == smIter->second.m_Caster )
 		{
@@ -1278,7 +1207,6 @@ bool IsNowCasting( const unsigned int aID, const bool aIsCancel )
 	{
 		g_SkillMessageList.erase( smIter );
 	}
-	LeaveCriticalSection( &g_CS );
 
 
 	return	returnValue;

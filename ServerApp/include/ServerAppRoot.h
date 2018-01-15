@@ -9,6 +9,7 @@
 
 #include	<winsock2.h>
 
+#include	<cMonitor.h>
 #include	"ErrorHandler.h"
 #include	"CMiniDump.h"
 
@@ -37,13 +38,12 @@ namespace	MatchlessServer
 
 
 
-extern CRITICAL_SECTION									g_CS;
-
 extern MatchlessServer::CTimer							g_Timer;
 
 extern std::list< unsigned int >						g_ReuseClientIDlist;
 extern unsigned int										g_LargestClientID;
 extern std::map< unsigned int, Matchless::CClient >		g_ClientList;			// < ID, SOCKET >
+extern cMonitor											g_ClientListMonitor;
 extern std::map< unsigned short int, int >				g_TeamPlayerNumMap;
 extern bool												g_IsGameStartable;
 extern bool												g_IsAcceptable;
