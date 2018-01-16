@@ -20,7 +20,7 @@ HRESULT CreateTerrain( IDirect3DDevice9 * pd3dDevice );
 void RenderTerrain( IDirect3DDevice9 * pd3dDevice );
 
 
-HRESULT DrawGameUI( ID3DXSprite * pSprite, ID3DXFont * pFont, CRITICAL_SECTION * pCS, const Matchless::EMainStepState aMSS );
+HRESULT DrawGameUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const Matchless::EMainStepState aMSS );
 
 HRESULT DrawGameWaitUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFACE_DESC * pBackBufferSurfaceDesc );
 HRESULT DrawGamePlayUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFACE_DESC * pBackBufferSurfaceDesc );

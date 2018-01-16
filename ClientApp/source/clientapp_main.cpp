@@ -28,15 +28,15 @@ void RenderText( void )
 
 void ProcessUserInput( float fElapsedTime )
 {
-	WRAP_ENTER_CS( &g_CS, 1 );
-	if( !DXUTIsActive()  ||  Matchless::EMSS_Play != g_ThisClient.m_PlayerInfo.GetMainStepState()  ||  !g_IsGraphicResourceLoaded  ||
-		0 >= g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth()  ||
-		g_ThisClient.m_PlayerInfo.GetCharacterInfo().FindState( Matchless::EST_Faint ) )
 	{
-		WRAP_LEAVE_CS( &g_CS, 1 );
-		return;
+		cMonitor::Owner lock{ g_Monitor };
+		if ( !DXUTIsActive() || Matchless::EMSS_Play != g_ThisClient.m_PlayerInfo.GetMainStepState() || !g_IsGraphicResourceLoaded ||
+			0 >= g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() ||
+			g_ThisClient.m_PlayerInfo.GetCharacterInfo().FindState( Matchless::EST_Faint ) )
+		{
+			return;
+		}
 	}
-	WRAP_LEAVE_CS( &g_CS, 1 );
 
 
 	static float	fElapsedTimeForTargeting = 0.0f;		// temporary
@@ -211,7 +211,7 @@ void ProcessUserInput( float fElapsedTime )
 		{
 			Matchless::SMatrix4		tempMatrix;
 
-			WRAP_ENTER_CS( &g_CS, 2 );
+			cMonitor::Owner lock{ g_Monitor };
 			for( int i = 0 ; i < 4 ; ++i )
 			{
 				for( int j = 0 ; j < 4 ; ++j )
@@ -221,7 +221,6 @@ void ProcessUserInput( float fElapsedTime )
 			}
 			g_ThisClient.m_PlayerInfo.SetTransform( tempMatrix );
 			g_IsUpdateMovePosition = true;
-			WRAP_LEAVE_CS( &g_CS, 2 );
 		}
 
 
@@ -266,16 +265,17 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 	pd3dDevice->SetTransform( D3DTS_VIEW, &tempViewTrans );
 
 
-	WRAP_ENTER_CS( &g_CS, 3 );
-	if( Matchless::EMSS_Play == g_ThisClient.m_PlayerInfo.GetMainStepState()  &&  !g_IsGraphicResourceLoaded )		// Load game resource
 	{
-		CreateGraphicResource( D3DXMESH_MANAGED, pd3dDevice, NULL );
+		cMonitor::Owner lock{ g_Monitor };
+		if ( Matchless::EMSS_Play == g_ThisClient.m_PlayerInfo.GetMainStepState() && !g_IsGraphicResourceLoaded )		// Load game resource
+		{
+			CreateGraphicResource( D3DXMESH_MANAGED, pd3dDevice, NULL );
+		}
+		else if ( Matchless::EMSS_Play != g_ThisClient.m_PlayerInfo.GetMainStepState() && g_IsGraphicResourceLoaded )	// Release game resource
+		{
+			DestroyGraphicResource();
+		}
 	}
-	else if( Matchless::EMSS_Play != g_ThisClient.m_PlayerInfo.GetMainStepState()  &&  g_IsGraphicResourceLoaded )	// Release game resource
-	{
-		DestroyGraphicResource();
-	}
-	WRAP_LEAVE_CS( &g_CS, 3 );
 
 
 	SAniTrackInfo											tempAniTrackInfo;
@@ -286,7 +286,7 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 	D3DXMATRIX	tempMatrix;
 
 
-	WRAP_ENTER_CS( &g_CS, 4 );
+	cMonitor::Owner lock{ g_Monitor };
 
 	switch( g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass() )
 	{
@@ -408,7 +408,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 			Matchless::SMatrix4		tempMatrix;
 
 
-			WRAP_ENTER_CS( &g_CS, 5 );
 			tempMatrix = g_ThisClient.m_PlayerInfo.GetTransform();
 
 			memcpy( buf, &tempMatrix, sizeof( tempMatrix ) );				bufIndex = sizeof( tempMatrix );
@@ -416,7 +415,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 			tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAME_MOVE_POSITION, bufIndex, buf );
 
 			g_IsUpdateMovePosition = false;
-			WRAP_LEAVE_CS( &g_CS, 5 );
 		}
 		if( g_IsUpdateMoveAnimation )
 		{
@@ -425,8 +423,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 			CNetMessage				tempMessage;
 			std::map< UINT, SAniTrackInfo >::const_iterator		atIter;
 
-
-			WRAP_ENTER_CS( &g_CS, 6 );
 
 			for( atIter = g_ThisCharacter.GetAniTrackMap().begin()  ;  atIter != g_ThisCharacter.GetAniTrackMap().end()  ;  ++atIter )
 			{
@@ -437,7 +433,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 			tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAME_MOVE_ANIMATION, bufIndex, buf );
 
 			g_IsUpdateMoveAnimation = false;
-			WRAP_LEAVE_CS( &g_CS, 6 );
 		}
 		break;
 
@@ -445,8 +440,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 		break;
 
 	}
-	WRAP_LEAVE_CS( &g_CS, 4 );
-
 }
 
 
@@ -522,7 +515,7 @@ void CALLBACK OnFrameRender( IDirect3DDevice9 * pd3dDevice, double fTime, float 
 
 				pd3dDevice->SetTransform( D3DTS_WORLD, &tempMtx );
 
-				WRAP_ENTER_CS( &g_CS, 7 );
+				cMonitor::Owner lock{ g_Monitor };
 				if( g_AnotherClientList[ amIter->first ].m_PlayerInfo.GetTeamNum() % 2 )
 				{
 					for( DWORD i = 0 ; i < g_NumHomeTeamMarkMaterial ; ++i )
@@ -541,7 +534,6 @@ void CALLBACK OnFrameRender( IDirect3DDevice9 * pd3dDevice, double fTime, float 
 						V( g_pAwayTeamMark->DrawSubset( i ) );
 					}
 				}
-				WRAP_LEAVE_CS( &g_CS, 7 );
 			}
 
 			g_SkyBox.Render( pd3dDevice, g_ThisCharacter.GetPosition() );
@@ -571,26 +563,27 @@ void CALLBACK OnFrameRender( IDirect3DDevice9 * pd3dDevice, double fTime, float 
 
 			pd3dDevice->SetTransform( D3DTS_WORLD, &tempMtx );
 
-			WRAP_ENTER_CS( &g_CS, 8 );
-			if( g_ThisClient.m_PlayerInfo.GetTeamNum() % 2 )
 			{
-				for( DWORD i = 0 ; i < g_NumHomeTeamMarkMaterial ; ++i )
+				cMonitor::Owner lock{ g_Monitor };
+				if ( g_ThisClient.m_PlayerInfo.GetTeamNum() % 2 )
 				{
-					V( pd3dDevice->SetMaterial( &g_pHomeTeamMarkMaterial[ i ] ) );
-					V( pd3dDevice->SetTexture( 0, g_ppHomeTeamMarkTexture[ i ] ) );
-					V( g_pHomeTeamMark->DrawSubset( i ) );
+					for ( DWORD i = 0; i < g_NumHomeTeamMarkMaterial; ++i )
+					{
+						V( pd3dDevice->SetMaterial( &g_pHomeTeamMarkMaterial[ i ] ) );
+						V( pd3dDevice->SetTexture( 0, g_ppHomeTeamMarkTexture[ i ] ) );
+						V( g_pHomeTeamMark->DrawSubset( i ) );
+					}
+				}
+				else
+				{
+					for ( DWORD i = 0; i < g_NumAwayTeamMarkMaterial; ++i )
+					{
+						V( pd3dDevice->SetMaterial( &g_pAwayTeamMarkMaterial[ i ] ) );
+						V( pd3dDevice->SetTexture( 0, g_ppAwayTeamMarkTexture[ i ] ) );
+						V( g_pAwayTeamMark->DrawSubset( i ) );
+					}
 				}
 			}
-			else
-			{
-				for( DWORD i = 0 ; i < g_NumAwayTeamMarkMaterial ; ++i )
-				{
-					V( pd3dDevice->SetMaterial( &g_pAwayTeamMarkMaterial[ i ] ) );
-					V( pd3dDevice->SetTexture( 0, g_ppAwayTeamMarkTexture[ i ] ) );
-					V( g_pAwayTeamMark->DrawSubset( i ) );
-				}
-			}
-			WRAP_LEAVE_CS( &g_CS, 8 );
 
 
 			RenderEffect( pd3dDevice );
@@ -621,7 +614,7 @@ void CALLBACK OnFrameRender( IDirect3DDevice9 * pd3dDevice, double fTime, float 
 #endif
 
 
-		DrawGameUI( g_pd3dSprite, g_pFont, &g_CS, g_ThisClient.m_PlayerInfo.GetMainStepState() );
+		DrawGameUI( g_pd3dSprite, g_pFont, g_ThisClient.m_PlayerInfo.GetMainStepState() );
 
 
 		V( pd3dDevice->EndScene() );
@@ -850,36 +843,40 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		break;
 
 	case IDC_WAIT_CHARSELECT:
-		WRAP_ENTER_CS( &g_CS, 9 );
-		g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( (Matchless::ECharacterClass)(unsigned int)((CDXUTComboBox*)pControl)->GetSelectedData() );
-		tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
-		tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
-								sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
-		WRAP_LEAVE_CS( &g_CS, 9 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( (Matchless::ECharacterClass)(unsigned int)((CDXUTComboBox*)pControl)->GetSelectedData() );
+			tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
+			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
+									sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
+		}
 		break;
 
 	case IDC_WAIT_TEAMSELECT:
-		WRAP_ENTER_CS( &g_CS, 10 );
-		g_ThisClient.m_PlayerInfo.SetTeamNum( tempTN = (unsigned short int)((CDXUTComboBox*)pControl)->GetSelectedData() );
-		tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_TEAM_UPDATE,
-								sizeof( tempTN ),  (char*)&tempTN  );
-		WRAP_LEAVE_CS( &g_CS, 10 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			g_ThisClient.m_PlayerInfo.SetTeamNum( tempTN = (unsigned short int)((CDXUTComboBox*)pControl)->GetSelectedData() );
+			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_TEAM_UPDATE,
+									sizeof( tempTN ),  (char*)&tempTN  );
+		}
 		break;
 		
 	case IDC_WAIT_MAPSELECT_PREV:
-		WRAP_ENTER_CS( &g_CS, 11 );
-		g_CurrentMapKind = (0 == g_CurrentMapKind) ? MAP_KIND_COUNT - 1 : g_CurrentMapKind - 1 ;
-		tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
-								sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
-		WRAP_LEAVE_CS( &g_CS, 11 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			g_CurrentMapKind = (0 == g_CurrentMapKind) ? MAP_KIND_COUNT - 1 : g_CurrentMapKind - 1 ;
+			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
+									sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
+		}
 		break;
 
 	case IDC_WAIT_MAPSELECT_NEXT:
-		WRAP_ENTER_CS( &g_CS, 12 );
-		g_CurrentMapKind = ((MAP_KIND_COUNT - 1) == g_CurrentMapKind) ? 0 : g_CurrentMapKind + 1 ;
-		tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
-								sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
-		WRAP_LEAVE_CS( &g_CS, 12 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			g_CurrentMapKind = ((MAP_KIND_COUNT - 1) == g_CurrentMapKind) ? 0 : g_CurrentMapKind + 1 ;
+			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
+									sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
+		}
 		break;
 
 	case IDC_PLAY_PLAYQUIT:
@@ -887,12 +884,13 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		break;
 
 	case IDC_ADJUST_PASS:
-		WRAP_ENTER_CS( &g_CS, 13 );
-		ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Wait );
-		tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
-		tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
-								sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
-		WRAP_LEAVE_CS( &g_CS, 13 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Wait );
+			tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
+			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
+									sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
+		}
 		break;
 
 	}
@@ -1030,8 +1028,6 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 #endif
 
 
-	InitializeCriticalSection( &g_CS );
-
 	WSADATA		wsa;
 	if( 0 != WSAStartup( MAKEWORD( 2, 2 ), &wsa ) )
 	{
@@ -1076,8 +1072,6 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 	closesocket( g_ThisClient.m_NetSystem.GetSocket() );
 
 	WSACleanup();
-
-	//DeleteCriticalSection( &g_CS );
 
 
 	return DXUTGetExitCode();

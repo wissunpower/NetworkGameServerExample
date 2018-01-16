@@ -109,16 +109,17 @@ HRESULT CALLBACK OnCreateDevice( IDirect3DDevice9 * pd3dDevice, const D3DSURFACE
 		);
 
 
-	WRAP_ENTER_CS( &g_CS, 15 );
-	InitializeCharacterMesh( D3DXMESH_MANAGED, pd3dDevice, NULL );
-	g_StartBackground.Build( pd3dDevice, TEXT( "Background/StartBackground.tga" ), D3DXMESH_MANAGED );
-	g_WaitBackground.Build( pd3dDevice, TEXT( "Background/WaitBackground.tga" ), D3DXMESH_MANAGED );
-	g_AdjustBackground.Build( pd3dDevice, TEXT( "Background/AdjustBackground.tga" ), D3DXMESH_MANAGED );
-	if( Matchless::EMSS_Play == g_ThisClient.m_PlayerInfo.GetMainStepState() )
 	{
-		CreateGraphicResource( D3DXMESH_MANAGED, pd3dDevice, NULL );
+		cMonitor::Owner lock{ g_Monitor };
+		InitializeCharacterMesh( D3DXMESH_MANAGED, pd3dDevice, NULL );
+		g_StartBackground.Build( pd3dDevice, TEXT( "Background/StartBackground.tga" ), D3DXMESH_MANAGED );
+		g_WaitBackground.Build( pd3dDevice, TEXT( "Background/WaitBackground.tga" ), D3DXMESH_MANAGED );
+		g_AdjustBackground.Build( pd3dDevice, TEXT( "Background/AdjustBackground.tga" ), D3DXMESH_MANAGED );
+		if ( Matchless::EMSS_Play == g_ThisClient.m_PlayerInfo.GetMainStepState() )
+		{
+			CreateGraphicResource( D3DXMESH_MANAGED, pd3dDevice, NULL );
+		}
 	}
-	WRAP_LEAVE_CS( &g_CS, 15 );
 
 
 	CreateEffect( pd3dDevice, D3DXMESH_MANAGED, D3DPOOL_MANAGED );
@@ -806,7 +807,7 @@ void DestroyEffect( void * pUserContext )
 
 bool UpdateEffect( void )
 {
-	WRAP_ENTER_CS( &g_CS, 16 );
+	cMonitor::Owner lock{ g_Monitor };
 
 	std::list< Matchless::SEffect >::iterator eIter = g_EffectList.begin();
 
@@ -866,8 +867,6 @@ bool UpdateEffect( void )
 
 		++eIter;
 	}
-
-	WRAP_LEAVE_CS( &g_CS, 16 );
 
 	return	true;
 }

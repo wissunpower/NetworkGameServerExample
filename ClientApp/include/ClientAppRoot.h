@@ -10,6 +10,7 @@
 #include	<winsock2.h>
 #include	<tchar.h>
 
+#include	"cMonitor.h"
 #include	"debugconsole.h"
 
 #include	"ErrorHandler.h"
@@ -43,9 +44,6 @@
 #if defined(DEBUG) | defined(_DEBUG)
 //#define		CS_TESTCODE_ON
 #endif
-
-#define		WRAP_ENTER_CS( x, pid )		WrapEnterCriticalSection( (x), __FILE__, __LINE__, (pid) )
-#define		WRAP_LEAVE_CS( x, pid )		WrapLeaveCriticalSection( (x), __FILE__, __LINE__, (pid) )
 
 #define		VK_TABLE_MAX	0x0100
 
@@ -138,8 +136,7 @@ extern TCHAR						g_Notice[ 512 ];
 
 extern char							g_ConnectIP[ IPV4_LENG + 1 ];
 
-extern CRITICAL_SECTION									g_CS;
-extern int												g_CSDepth;
+extern cMonitor											g_Monitor;
 
 extern Matchless::CClient								g_ThisClient;
 extern CAnimateMesh										g_ThisCharacter;
@@ -329,9 +326,6 @@ extern CSound *			g_pHealerNormalAttackSound;
 extern CSound *			g_pHealerQuickHealSound;
 
 
-
-void WrapEnterCriticalSection( LPCRITICAL_SECTION lpCriticalSection, char * pFileInfo, long aLineInfo, int aPositionID );
-void WrapLeaveCriticalSection( LPCRITICAL_SECTION lpCriticalSection, char * pFileInfo, long aLineInfo, int aPositionID );
 
 bool UpdateRoomMasterUI( const Matchless::EMainStepState aState, const bool aOnOff );
 

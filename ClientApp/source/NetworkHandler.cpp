@@ -13,7 +13,6 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 	unsigned int				tempCasterID;
 	unsigned int				tempTargetID;
 	unsigned short int			tempTeamNo;
-	bool						tempBool;
 	bool						tempbRM;
 	Matchless::SMatrix4			tempMtx;
 	D3DXMATRIX					tempD3DXMtx;
@@ -47,24 +46,26 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			tempClient.m_PlayerInfo.SetbRoomMaster( tempbRM );
 			tempClient.m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
 
-			WRAP_ENTER_CS( &g_CS, 17 );
-			if( 0 != tempID  &&  g_ThisClient.m_NetSystem.GetID() != tempID )
 			{
-				g_AnotherClientList[ tempID ] = tempClient;
-				//g_AnotherClientList.insert( std::map< unsigned int, Matchless::CClient >::value_type( tempID, tempClient ) );
+				cMonitor::Owner lock{ g_Monitor };
+				if ( 0 != tempID && g_ThisClient.m_NetSystem.GetID() != tempID )
+				{
+					g_AnotherClientList[ tempID ] = tempClient;
+					//g_AnotherClientList.insert( std::map< unsigned int, Matchless::CClient >::value_type( tempID, tempClient ) );
+				}
 			}
-			WRAP_LEAVE_CS( &g_CS, 17 );
 			break;
 
 		case Matchless::FSTC_INFORM_ANOTHERCLIENT_LEAVE:
 			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );
-			WRAP_ENTER_CS( &g_CS, 18 );
-			if( 0 != tempID  &&  g_ThisClient.m_NetSystem.GetID() != tempID )
 			{
-				g_AnotherClientList.erase( tempID );
-				g_AnotherCharacterList.erase( tempID );
+				cMonitor::Owner lock{ g_Monitor };
+				if ( 0 != tempID && g_ThisClient.m_NetSystem.GetID() != tempID )
+				{
+					g_AnotherClientList.erase( tempID );
+					g_AnotherCharacterList.erase( tempID );
+				}
 			}
-			WRAP_LEAVE_CS( &g_CS, 18 );
 			break;
 
 		case Matchless::FSTC_CHAT:
@@ -73,47 +74,51 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 		case Matchless::FSTC_CHARCLASS_UPDATE:
 			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );					bufIndex = sizeof( tempID );
 			memcpy( &tempCC, tempMessage.GetpAddData() + bufIndex, sizeof( tempCC ) );		bufIndex += sizeof( tempCC );
-			WRAP_ENTER_CS( &g_CS, 19 );
-			if( g_ThisClient.m_NetSystem.GetID() == tempID )
 			{
-				g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
+				cMonitor::Owner lock{ g_Monitor };
+				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
+				{
+					g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
+				}
+				else if ( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
+				{
+					g_AnotherClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
+				}
 			}
-			else if( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
-			{
-				g_AnotherClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().SetClass( tempCC );
-			}
-			WRAP_LEAVE_CS( &g_CS, 19 );
 			break;
 
 		case Matchless::FSTC_TEAM_UPDATE:
 			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
 			memcpy( &tempTeamNo, tempMessage.GetpAddData() + bufIndex, sizeof( tempTeamNo ) );		bufIndex += sizeof( tempTeamNo );
-			WRAP_ENTER_CS( &g_CS, 20 );
-			if( g_ThisClient.m_NetSystem.GetID() == tempID )
 			{
-				g_ThisClient.m_PlayerInfo.SetTeamNum( tempTeamNo );
+				cMonitor::Owner lock{ g_Monitor };
+				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
+				{
+					g_ThisClient.m_PlayerInfo.SetTeamNum( tempTeamNo );
+				}
+				else if ( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
+				{
+					g_AnotherClientList[ tempID ].m_PlayerInfo.SetTeamNum( tempTeamNo );
+				}
 			}
-			else if( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
-			{
-				g_AnotherClientList[ tempID ].m_PlayerInfo.SetTeamNum( tempTeamNo );
-			}
-			WRAP_LEAVE_CS( &g_CS, 20 );
 			break;
 
 		case Matchless::FSTC_MAP_UPDATE:
-			WRAP_ENTER_CS( &g_CS, 21 );
-			memcpy( &g_CurrentMapKind, tempMessage.GetpAddData(), sizeof( g_CurrentMapKind ) );
-			WRAP_LEAVE_CS( &g_CS, 21 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				memcpy( &g_CurrentMapKind, tempMessage.GetpAddData(), sizeof( g_CurrentMapKind ) );
+			}
 			break;
 
 		case Matchless::FSTC_GAMEOUT:
-			WRAP_ENTER_CS( &g_CS, 22 );
-			ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Adjust );
-			//if( g_pBackgroundSound )
-			//{
-			//	g_pBackgroundSound->Stop();
-			//}
-			WRAP_LEAVE_CS( &g_CS, 22 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Adjust );
+				//if( g_pBackgroundSound )
+				//{
+				//	g_pBackgroundSound->Stop();
+				//}
+			}
 			break;
 
 		case Matchless::FSTC_GAME_MOVE_POSITION:
@@ -130,11 +135,12 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 					tempD3DXMtx.m[ i ][ j ] = tempMtx.m[ i ][ j ];
 				}
 			}
-			WRAP_ENTER_CS( &g_CS, 23 );
-			g_AnotherClientList[ tempID ].m_PlayerInfo.SetTransform( tempMtx );
-			g_AnotherCharacterList[ tempID ].SetPosition( D3DXVECTOR3( tempD3DXMtx._41, tempD3DXMtx._42, tempD3DXMtx._43 ) );
-			g_AnotherCharacterList[ tempID ].SetTransforMatrix( tempD3DXMtx );
-			WRAP_LEAVE_CS( &g_CS, 23 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				g_AnotherClientList[ tempID ].m_PlayerInfo.SetTransform( tempMtx );
+				g_AnotherCharacterList[ tempID ].SetPosition( D3DXVECTOR3( tempD3DXMtx._41, tempD3DXMtx._42, tempD3DXMtx._43 ) );
+				g_AnotherCharacterList[ tempID ].SetTransforMatrix( tempD3DXMtx );
+			}
 			break;
 
 		case Matchless::FSTC_GAME_MOVE_ANIMATION:
@@ -143,9 +149,9 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 				break;
 			}
 			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
-			WRAP_ENTER_CS( &g_CS, 24 );
 			while( bufIndex < tempMessage.GetAddDataLen() )
 			{
+				cMonitor::Owner lock{ g_Monitor };
 				memcpy( &tempAniTrackIndex, tempMessage.GetpAddData() + bufIndex, sizeof( tempAniTrackIndex ) );
 				bufIndex += sizeof( tempAniTrackIndex );
 				memcpy( &tempAniTrackInfo, tempMessage.GetpAddData() + bufIndex, sizeof( tempAniTrackInfo ) );
@@ -153,16 +159,16 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 				g_AnotherCharacterList[ tempID ].SetCurrentAnimationSet( tempAniTrackIndex, tempAniTrackInfo.m_AniIndex );
 				g_AnotherCharacterList[ tempID ].SetAniTrackInfoDesc( tempAniTrackIndex, tempAniTrackInfo.m_TrackDesc );
 			}
-			WRAP_LEAVE_CS( &g_CS, 24 );
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_CASTSTART:
 			memcpy( &tempCastTime, tempMessage.GetpAddData(), sizeof( tempCastTime ) );
-			WRAP_ENTER_CS( &g_CS, 25 );
-			g_IsNowCasting = true;
-			g_CastStartTick = g_Timer.GetTick();
-			g_CastEndTick = g_CastStartTick + tempCastTime;
-			WRAP_LEAVE_CS( &g_CS, 25 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				g_IsNowCasting = true;
+				g_CastStartTick = g_Timer.GetTick();
+				g_CastEndTick = g_CastStartTick + tempCastTime;
+			}
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_APPLY:
@@ -173,11 +179,12 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_CANCEL:
-			WRAP_ENTER_CS( &g_CS, 26 );
-			g_IsNowCasting = false;
-			g_CastStartTick = 0;
-			g_CastEndTick = 0;
-			WRAP_LEAVE_CS( &g_CS, 26 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				g_IsNowCasting = false;
+				g_CastStartTick = 0;
+				g_CastEndTick = 0;
+			}
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_FAILED:
@@ -187,56 +194,61 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );
 			memcpy( &tempCDT, tempMessage.GetpAddData() + sizeof( tempID ), sizeof( tempCDT ) );
 			memcpy( &tempNumeric, tempMessage.GetpAddData() + sizeof( tempID ) + sizeof( tempCDT ), sizeof( tempNumeric ) );
-			WRAP_ENTER_CS( &g_CS, 27 );
-			if( g_ThisClient.m_NetSystem.GetID() == tempID )
 			{
-				g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetData( tempCDT, tempNumeric, 0, 0 );
+				cMonitor::Owner lock{ g_Monitor };
+				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
+				{
+					g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetData( tempCDT, tempNumeric, 0, 0 );
+				}
+				else if ( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
+				{
+					g_AnotherClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().SetData( tempCDT, tempNumeric, 0, 0 );
+				}
 			}
-			else if( g_AnotherClientList.end() != g_AnotherClientList.find( tempID ) )
-			{
-				g_AnotherClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().SetData( tempCDT, tempNumeric, 0, 0 );
-			}
-			WRAP_LEAVE_CS( &g_CS, 27 );
 			break;
 
 		case Matchless::FSTC_GAMESTART_FAILED:
-			WRAP_ENTER_CS( &g_CS, 28 );
-			UpdateRoomMasterUI( Matchless::EMSS_Wait, (g_IsGameStartable = false) && g_ThisClient.m_PlayerInfo.IsRoomMaster() );
-			WRAP_LEAVE_CS( &g_CS, 28 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				UpdateRoomMasterUI( Matchless::EMSS_Wait, (g_IsGameStartable = false) && g_ThisClient.m_PlayerInfo.IsRoomMaster() );
+			}
 			break;
 
 		case Matchless::FSTC_GAMESTART_SUCCEED:
-			WRAP_ENTER_CS( &g_CS, 29 );
-			ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Play );
-			UpdateRoomMasterUI( Matchless::EMSS_Play, g_ThisClient.m_PlayerInfo.IsRoomMaster() );
-			//if( g_pBackgroundSound )
-			//{
-			//	g_pBackgroundSound->Reset();
-			//	g_pBackgroundSound->Play( 0, DSBPLAY_LOOPING, 1 );
-			//}
-			WRAP_LEAVE_CS( &g_CS, 29 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Play );
+				UpdateRoomMasterUI( Matchless::EMSS_Play, g_ThisClient.m_PlayerInfo.IsRoomMaster() );
+				//if( g_pBackgroundSound )
+				//{
+				//	g_pBackgroundSound->Reset();
+				//	g_pBackgroundSound->Play( 0, DSBPLAY_LOOPING, 1 );
+				//}
+			}
 			break;
 
 		case Matchless::FSTC_INFORM_CLIENTINFO:
 			memcpy( &tempClient, tempMessage.GetpAddData(), sizeof( tempClient ) );
-			WRAP_ENTER_CS( &g_CS, 30 );
-			if( g_ThisClient.m_NetSystem.GetID() != tempClient.m_NetSystem.GetID() )
 			{
-				g_AnotherClientList[ tempClient.m_NetSystem.GetID() ] = tempClient;
+				cMonitor::Owner lock{ g_Monitor };
+				if ( g_ThisClient.m_NetSystem.GetID() != tempClient.m_NetSystem.GetID() )
+				{
+					g_AnotherClientList[ tempClient.m_NetSystem.GetID() ] = tempClient;
+				}
+				else
+				{
+					g_ThisClient.m_PlayerInfo.SetCharacterInfo( tempClient.m_PlayerInfo.GetCharacterInfo() );
+					g_ThisClient.m_PlayerInfo.SetTransform( tempClient.m_PlayerInfo.GetTransform() );
+				}
 			}
-			else
-			{
-				g_ThisClient.m_PlayerInfo.SetCharacterInfo( tempClient.m_PlayerInfo.GetCharacterInfo() );
-				g_ThisClient.m_PlayerInfo.SetTransform( tempClient.m_PlayerInfo.GetTransform() );
-			}
-			WRAP_LEAVE_CS( &g_CS, 30 );
 			break;
 
 		case Matchless::FSTC_STARTABLE:
-			WRAP_ENTER_CS( &g_CS, 31 );
-			memcpy( &g_IsGameStartable, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
-			UpdateRoomMasterUI( Matchless::EMSS_Play, g_IsGameStartable && g_ThisClient.m_PlayerInfo.IsRoomMaster() );
-			WRAP_LEAVE_CS( &g_CS, 31 );
+			{
+				cMonitor::Owner lock{ g_Monitor };
+				memcpy( &g_IsGameStartable, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
+				UpdateRoomMasterUI( Matchless::EMSS_Play, g_IsGameStartable && g_ThisClient.m_PlayerInfo.IsRoomMaster() );
+			}
 			break;
 
 		}
@@ -268,22 +280,22 @@ bool HandleSkillWork( const Matchless::ECharacterSkill aSkillKind, const unsigne
 	unsigned int			tempPlayTime = 60;
 
 
-	WRAP_ENTER_CS( &g_CS, 32 );
-	if( aCasterID == g_ThisClient.m_NetSystem.GetID() )
 	{
-		pCaster = &g_ThisClient;
+		cMonitor::Owner lock{ g_Monitor };
+		if ( aCasterID == g_ThisClient.m_NetSystem.GetID() )
+		{
+			pCaster = &g_ThisClient;
+		}
+		else if ( g_AnotherClientList.end() != g_AnotherClientList.find( aCasterID ) )
+		{
+			pCaster = &( g_AnotherClientList[ aCasterID ] );
+		}
+		else
+		{
+			pCaster = NULL;
+			return	false;
+		}
 	}
-	else if( g_AnotherClientList.end() != g_AnotherClientList.find( aCasterID ) )
-	{
-		pCaster = &(g_AnotherClientList[ aCasterID ]);
-	}
-	else
-	{
-		pCaster = NULL;
-		WRAP_LEAVE_CS( &g_CS, 32 );
-		return	false;
-	}
-	WRAP_LEAVE_CS( &g_CS, 32 );
 
 	switch( aSkillKind )
 	{
@@ -363,11 +375,12 @@ bool HandleSkillWork( const Matchless::ECharacterSkill aSkillKind, const unsigne
 	case Matchless::ECS_Mage_IceBolt:
 		tempEffectInfo.m_PosType = Matchless::SEffect::EPT_Active;
 		tempEffectInfo.m_CharacterID = aTargetID;
-		WRAP_ENTER_CS( &g_CS, 33 );
-		tempEffectInfo.m_StartPosX = pCaster->m_PlayerInfo.GetTransform()._41;
-		tempEffectInfo.m_StartPosY = pCaster->m_PlayerInfo.GetTransform()._42;
-		tempEffectInfo.m_StartPosZ = pCaster->m_PlayerInfo.GetTransform()._43;
-		WRAP_LEAVE_CS( &g_CS, 33 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			tempEffectInfo.m_StartPosX = pCaster->m_PlayerInfo.GetTransform()._41;
+			tempEffectInfo.m_StartPosY = pCaster->m_PlayerInfo.GetTransform()._42;
+			tempEffectInfo.m_StartPosZ = pCaster->m_PlayerInfo.GetTransform()._43;
+		}
 		tempEffectInfo.m_StartPosY += (CHARACTER_COMMON_HEIGHT / 2);
 		//pPlaySound = g_pMageNormalAttackSound;
 		tempAniKind = CHARACTER_ANIINDEX_ATTACK;
@@ -376,11 +389,12 @@ bool HandleSkillWork( const Matchless::ECharacterSkill aSkillKind, const unsigne
 	case Matchless::ECS_Mage_FireBall:
 		tempEffectInfo.m_PosType = Matchless::SEffect::EPT_Active;
 		tempEffectInfo.m_CharacterID = aTargetID;
-		WRAP_ENTER_CS( &g_CS, 34 );
-		tempEffectInfo.m_StartPosX = pCaster->m_PlayerInfo.GetTransform()._41;
-		tempEffectInfo.m_StartPosY = pCaster->m_PlayerInfo.GetTransform()._42;
-		tempEffectInfo.m_StartPosZ = pCaster->m_PlayerInfo.GetTransform()._43;
-		WRAP_LEAVE_CS( &g_CS, 34 );
+		{
+			cMonitor::Owner lock{ g_Monitor };
+			tempEffectInfo.m_StartPosX = pCaster->m_PlayerInfo.GetTransform()._41;
+			tempEffectInfo.m_StartPosY = pCaster->m_PlayerInfo.GetTransform()._42;
+			tempEffectInfo.m_StartPosZ = pCaster->m_PlayerInfo.GetTransform()._43;
+		}
 		tempEffectInfo.m_StartPosY += (CHARACTER_COMMON_HEIGHT / 2);
 		//pPlaySound = g_pMageNormalAttackSound;
 		tempAniKind = CHARACTER_ANIINDEX_ATTACK;
@@ -427,18 +441,19 @@ bool HandleSkillWork( const Matchless::ECharacterSkill aSkillKind, const unsigne
 	tempEffectInfo.m_Type1 = EFFECTTYPE_SKILL;
 	tempEffectInfo.m_Type2 = (unsigned int)aSkillKind;
 	tempEffectInfo.m_CharacterID = aTargetID;
-	WRAP_ENTER_CS( &g_CS, 35 );
-	tempEffectInfo.m_StartTick = g_Timer.GetTick();
-	tempEffectInfo.m_EndTick = g_Timer.GetTick() + tempPlayTime;
-	tempEffectInfo.m_CurrentTick = tempEffectInfo.m_StartTick;
-	g_EffectList.push_back( tempEffectInfo );
-
-	if( pPlaySound )
 	{
-		pPlaySound->Reset();
-		pPlaySound->Play( 0, 0, 10 );
+		cMonitor::Owner lock{ g_Monitor };
+		tempEffectInfo.m_StartTick = g_Timer.GetTick();
+		tempEffectInfo.m_EndTick = g_Timer.GetTick() + tempPlayTime;
+		tempEffectInfo.m_CurrentTick = tempEffectInfo.m_StartTick;
+		g_EffectList.push_back( tempEffectInfo );
+
+		if ( pPlaySound )
+		{
+			pPlaySound->Reset();
+			pPlaySound->Play( 0, 0, 10 );
+		}
 	}
-	WRAP_LEAVE_CS( &g_CS, 35 );
 
 
 	return	true;

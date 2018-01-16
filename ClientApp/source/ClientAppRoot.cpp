@@ -35,8 +35,7 @@ TCHAR						g_Notice[ 512 ];
 
 char						g_ConnectIP[ IPV4_LENG + 1 ];
 
-CRITICAL_SECTION								g_CS;
-int												g_CSDepth = 0;
+cMonitor										g_Monitor;
 
 Matchless::CClient								g_ThisClient;
 CAnimateMesh									g_ThisCharacter;
@@ -226,40 +225,6 @@ CSound *			g_pHealerQuickHealSound;
 
 
 
-void WrapEnterCriticalSection( LPCRITICAL_SECTION lpCriticalSection, char * pFileInfo, long aLineInfo, int aPositionID )
-{
-	EnterCriticalSection( lpCriticalSection );
-
-	g_CSHistory.push_front( aPositionID );
-
-	char *	pLastSlash;
-
-	pLastSlash = strrchr( pFileInfo, TEXT( '\\' ) );
-
-#ifdef	CS_TESTCODE_ON
-	g_Console.Output( "%4d    ENTER    %s    %u\n", g_CSDepth, pLastSlash, aLineInfo );
-#endif
-}
-
-
-void WrapLeaveCriticalSection( LPCRITICAL_SECTION lpCriticalSection, char * pFileInfo, long aLineInfo, int aPositionID )
-{
-	--g_CSDepth;
-
-	char *	pLastSlash;
-
-	pLastSlash = strrchr( pFileInfo, TEXT( '\\' ) );
-
-#ifdef	CS_TESTCODE_ON
-	g_Console.Output( "%4d    LEAVE    %s    %u\n", g_CSDepth, pLastSlash, aLineInfo );
-#endif
-
-	g_CSHistory.remove( aPositionID );
-
-	LeaveCriticalSection( lpCriticalSection );
-}
-
-
 bool UpdateRoomMasterUI( const Matchless::EMainStepState aState, const bool aOnOff )
 {
 	switch( aState )
@@ -290,21 +255,21 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 	Matchless::CClient *		pTarget = NULL;
 
 
-	WRAP_ENTER_CS( &g_CS, 14 );
-	if( g_AnotherClientList.end() != g_AnotherClientList.find( aCurrentTarget ) )
 	{
-		pTarget = (&g_AnotherClientList[ aCurrentTarget ]);
+		cMonitor::Owner lock{ g_Monitor };
+		if ( g_AnotherClientList.end() != g_AnotherClientList.find( aCurrentTarget ) )
+		{
+			pTarget = ( &g_AnotherClientList[ aCurrentTarget ] );
+		}
+		else if ( g_ThisClient.m_NetSystem.GetID() == aCurrentTarget )
+		{
+			pTarget = ( &g_ThisClient );
+		}
+		else
+		{
+			return	false;
+		}
 	}
-	else if( g_ThisClient.m_NetSystem.GetID() == aCurrentTarget )
-	{
-		pTarget = (&g_ThisClient);
-	}
-	else
-	{
-		WRAP_LEAVE_CS( &g_CS, 14 );
-		return	false;
-	}
-	WRAP_LEAVE_CS( &g_CS, 14 );
 
 	switch( aClass )
 	{

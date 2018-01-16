@@ -244,16 +244,17 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 	CreateTerrain( apDevice );
 
 
-	WRAP_ENTER_CS( &g_CS, 36 );
-	if( 0 == g_CurrentMapKind )
 	{
-		g_SkyBox.Build( apDevice, TEXT( "SkyBox/SkyBox1/SkyBox_SkyBox1_" ), aMeshOptions );
+		cMonitor::Owner lock{ g_Monitor };
+		if ( 0 == g_CurrentMapKind )
+		{
+			g_SkyBox.Build( apDevice, TEXT( "SkyBox/SkyBox1/SkyBox_SkyBox1_" ), aMeshOptions );
+		}
+		else
+		{
+			g_SkyBox.Build( apDevice, TEXT( "SkyBox/SkyBox2/SkyBox_SkyBox2_" ), aMeshOptions );
+		}
 	}
-	else
-	{
-		g_SkyBox.Build( apDevice, TEXT( "SkyBox/SkyBox2/SkyBox_SkyBox2_" ), aMeshOptions );
-	}
-	WRAP_LEAVE_CS( &g_CS, 36 );
 
 
 	GetCharacterResourceName( g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass(), tempPath, MAX_PATH );
@@ -285,31 +286,29 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 			}
 		}
 
-		WRAP_ENTER_CS( &g_CS, 37 );
+		cMonitor::Owner lock{ g_Monitor };
 		g_IsUpdateMovePosition = true;
 		g_IsUpdateMoveAnimation = true;
-		WRAP_LEAVE_CS( &g_CS, 37 );
 	}
 
-	WRAP_ENTER_CS( &g_CS, 38 );
-	for(  std::map< unsigned int, Matchless::CClient >::iterator cIt = g_AnotherClientList.begin()  ;
-			cIt != g_AnotherClientList.end()  ;  ++cIt  )
 	{
-		GetCharacterResourceName( cIt->second.m_PlayerInfo.GetCharacterInfo().GetClass(), tempPath, MAX_PATH );
-		if( !FAILED( RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+		cMonitor::Owner lock{ g_Monitor };
+		for ( auto cIt = g_AnotherClientList.begin() ; cIt != g_AnotherClientList.end() ; ++cIt )
 		{
-			std::map< unsigned int, CAnimateMesh >::iterator	amIt =
-				g_AnotherCharacterList.insert( std::map< unsigned int, CAnimateMesh >::value_type( cIt->first, CAnimateMesh() ) ).first;
-			V_RETURN( amIt->second.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
-			amIt->second.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
-			amIt->second.MoveOnYAxis(
-				GetDistanceWithMesh( &tempBool, amIt->second.GetPosition(), amIt->second.GetYAxis(), g_pTerrain, g_TerrainTransform )
+			GetCharacterResourceName( cIt->second.m_PlayerInfo.GetCharacterInfo().GetClass(), tempPath, MAX_PATH );
+			if ( !FAILED( RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+			{
+				auto amIt = g_AnotherCharacterList.insert( std::map< unsigned int, CAnimateMesh >::value_type( cIt->first, CAnimateMesh() ) ).first;
+				V_RETURN( amIt->second.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
+				amIt->second.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
+				amIt->second.MoveOnYAxis(
+					GetDistanceWithMesh( &tempBool, amIt->second.GetPosition(), amIt->second.GetYAxis(), g_pTerrain, g_TerrainTransform )
 				);
-			amIt->second.SetCurrentAnimationSet( 0, CHARACTER_ANIINDEX_IDLE );
-			amIt->second.SetCurrentAnimationSet( 1, CHARACTER_ANIINDEX_IDLE );
+				amIt->second.SetCurrentAnimationSet( 0, CHARACTER_ANIINDEX_IDLE );
+				amIt->second.SetCurrentAnimationSet( 1, CHARACTER_ANIINDEX_IDLE );
+			}
 		}
 	}
-	WRAP_LEAVE_CS( &g_CS, 38 );
 
 
 	g_IsGraphicResourceLoaded = true;
@@ -397,16 +396,17 @@ HRESULT CreateTerrain( IDirect3DDevice9 * pd3dDevice )
 	LPD3DXBUFFER	pAttributes;
 
 
-	WRAP_ENTER_CS( &g_CS, 39 );
-	if( 0 == g_CurrentMapKind )
 	{
-		RetrieveResourceFile( TEXT( "Terrain/Terrain1/Terrain_Terrain1.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+		cMonitor::Owner lock{ g_Monitor };
+		if ( 0 == g_CurrentMapKind )
+		{
+			RetrieveResourceFile( TEXT( "Terrain/Terrain1/Terrain_Terrain1.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+		}
+		else
+		{
+			RetrieveResourceFile( TEXT( "Terrain/Terrain2/Terrain_Terrain2.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+		}
 	}
-	else
-	{
-		RetrieveResourceFile( TEXT( "Terrain/Terrain2/Terrain_Terrain2.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	}
-	WRAP_LEAVE_CS( &g_CS, 39 );
 
 
 	GetCurrentDirectory( MAX_PATH, tempCD );
@@ -507,7 +507,7 @@ void RenderTerrain( IDirect3DDevice9 * pd3dDevice )
 }
 
 
-HRESULT DrawGameUI( ID3DXSprite * pSprite, ID3DXFont * pFont, CRITICAL_SECTION * pCS, const Matchless::EMainStepState aStep )
+HRESULT DrawGameUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const Matchless::EMainStepState aStep )
 {
 	HRESULT		hr = S_OK;
 
@@ -516,24 +516,22 @@ HRESULT DrawGameUI( ID3DXSprite * pSprite, ID3DXFont * pFont, CRITICAL_SECTION *
 
 	V_RETURN( pSprite->Begin( D3DXSPRITE_ALPHABLEND | D3DXSPRITE_SORT_TEXTURE ) );
 
-	WRAP_ENTER_CS( pCS, 40 );
-
-
-	switch( aStep )
 	{
+		cMonitor::Owner lock{ g_Monitor };
+		switch ( aStep )
+		{
 
-	case Matchless::EMSS_Wait:
-		hr = DrawGameWaitUI( pSprite, pFont, pd3dsdBackBuffer );
-		break;
+		case Matchless::EMSS_Wait:
+			hr = DrawGameWaitUI( pSprite, pFont, pd3dsdBackBuffer );
+			break;
 
-	case Matchless::EMSS_Play:
-		hr = DrawGamePlayUI( pSprite, pFont, pd3dsdBackBuffer );
-		break;
+		case Matchless::EMSS_Play:
+			hr = DrawGamePlayUI( pSprite, pFont, pd3dsdBackBuffer );
+			break;
 
+		}
 	}
 
-
-	WRAP_LEAVE_CS( pCS, 40 );
 
 	V_RETURN( pSprite->End() );
 
@@ -628,61 +626,61 @@ HRESULT DrawGameWaitUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 
 
 	// draw another play information.
-	WRAP_ENTER_CS( &g_CS, 41 );
-	for(  std::map< unsigned int, Matchless::CClient >::iterator acIter = g_AnotherClientList.begin()  ;
-			acIter != g_AnotherClientList.end()  ;  ++acIter )
 	{
-		switch( acIter->second.m_PlayerInfo.GetCharacterInfo().GetClass() )
+		cMonitor::Owner lock{ g_Monitor };
+		for ( auto acIter = g_AnotherClientList.begin() ; acIter != g_AnotherClientList.end() ; ++acIter )
 		{
+			switch ( acIter->second.m_PlayerInfo.GetCharacterInfo().GetClass() )
+			{
 
-		case Matchless::ECC_Breaker:
-			tempTexture = g_pTexBreakerEmblem;
-			break;
+			case Matchless::ECC_Breaker:
+				tempTexture = g_pTexBreakerEmblem;
+				break;
 
-		case Matchless::ECC_Defender:
-			tempTexture = g_pTexDefenderEmblem;
-			break;
+			case Matchless::ECC_Defender:
+				tempTexture = g_pTexDefenderEmblem;
+				break;
 
-		case Matchless::ECC_Mage:
-			tempTexture = g_pTexMageEmblem;
-			break;
+			case Matchless::ECC_Mage:
+				tempTexture = g_pTexMageEmblem;
+				break;
 
-		case Matchless::ECC_Healer:
-			tempTexture = g_pTexHealerEmblem;
-			break;
+			case Matchless::ECC_Healer:
+				tempTexture = g_pTexHealerEmblem;
+				break;
 
-		default:
-			tempTexture = NULL;
-			break;
+			default:
+				tempTexture = NULL;
+				break;
 
+			}
+
+			if ( g_ThisClient.m_PlayerInfo.GetTeamNum() == acIter->second.m_PlayerInfo.GetTeamNum() )
+			{
+				tempPos.x = tempFriendWidth;
+				tempPos.y = tempFriendHeight;
+				tempFriendHeight += 60.0f;
+			}
+			else
+			{
+				tempPos.x = tempEnemyWidth;
+				tempPos.y = tempEnemyHeight;
+				tempEnemyHeight += 60.0f;
+			}
+			tempPos.z = 0.375f;
+			hr = pSprite->Draw( g_pTexAnCharInfoFrame, NULL, NULL, &tempPos, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempPos2.x = tempPos.x + 8;
+			tempPos2.y = tempPos.y + 6;
+			tempPos2.z = 0.0f;
+			hr = pSprite->Draw( tempTexture, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			txtHelper.SetInsertionPos( (int)( tempPos.x + 64.0f ), (int)tempPos.y );
+			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
+			_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
+			txtHelper.DrawTextLine( tempStr );
 		}
-
-		if( g_ThisClient.m_PlayerInfo.GetTeamNum() == acIter->second.m_PlayerInfo.GetTeamNum() )
-		{
-			tempPos.x = tempFriendWidth;
-			tempPos.y = tempFriendHeight;
-			tempFriendHeight += 60.0f;
-		}
-		else
-		{
-			tempPos.x = tempEnemyWidth;
-			tempPos.y = tempEnemyHeight;
-			tempEnemyHeight += 60.0f;
-		}
-		tempPos.z = 0.375f;
-		hr = pSprite->Draw( g_pTexAnCharInfoFrame, NULL, NULL, &tempPos, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempPos2.x = tempPos.x + 8;
-		tempPos2.y = tempPos.y + 6;
-		tempPos2.z = 0.0f;
-		hr = pSprite->Draw( tempTexture, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		txtHelper.SetInsertionPos( (int)(tempPos.x + 64.0f), (int)tempPos.y );
-		txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-		_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
-		txtHelper.DrawTextLine( tempStr );
 	}
-	WRAP_LEAVE_CS( &g_CS, 41 );
 
 
 	// draw map information.
@@ -789,91 +787,91 @@ HRESULT DrawGamePlayUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 
 
 	// draw another play information.
-	WRAP_ENTER_CS( &g_CS, 42 );
-	for(  std::map< unsigned int, Matchless::CClient >::iterator acIter = g_AnotherClientList.begin()  ;
-			acIter != g_AnotherClientList.end()  ;  ++acIter )
 	{
-		switch( acIter->second.m_PlayerInfo.GetCharacterInfo().GetClass() )
+		cMonitor::Owner lock{ g_Monitor };
+		for ( auto acIter = g_AnotherClientList.begin() ; acIter != g_AnotherClientList.end() ; ++acIter )
 		{
+			switch ( acIter->second.m_PlayerInfo.GetCharacterInfo().GetClass() )
+			{
 
-		case Matchless::ECC_Breaker:
-			tempTexture = g_pTexBreakerEmblem;
-			break;
+			case Matchless::ECC_Breaker:
+				tempTexture = g_pTexBreakerEmblem;
+				break;
 
-		case Matchless::ECC_Defender:
-			tempTexture = g_pTexDefenderEmblem;
-			break;
+			case Matchless::ECC_Defender:
+				tempTexture = g_pTexDefenderEmblem;
+				break;
 
-		case Matchless::ECC_Mage:
-			tempTexture = g_pTexMageEmblem;
-			break;
+			case Matchless::ECC_Mage:
+				tempTexture = g_pTexMageEmblem;
+				break;
 
-		case Matchless::ECC_Healer:
-			tempTexture = g_pTexHealerEmblem;
-			break;
+			case Matchless::ECC_Healer:
+				tempTexture = g_pTexHealerEmblem;
+				break;
 
-		default:
-			tempTexture = NULL;
-			break;
+			default:
+				tempTexture = NULL;
+				break;
 
+			}
+
+			if ( g_ThisClient.m_PlayerInfo.GetTeamNum() == acIter->second.m_PlayerInfo.GetTeamNum() )
+			{
+				tempPos.x = TX( tempFriendWidth );
+				tempPos.y = TY( tempFriendHeight );
+				tempFriendHeight += 60.0f;
+			}
+			else
+			{
+				tempPos.x = TX( tempEnemyWidth );
+				tempPos.y = TY( tempEnemyHeight );
+				tempEnemyHeight += 60.0f;
+			}
+			tempPos.z = 0.375f;
+			hr = pSprite->Draw( g_pTexAnCharInfoFrame, NULL, NULL, &tempPos, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempPos2.x = tempPos.x + 50;
+			tempPos2.y = tempPos.y + 7;
+			tempPos2.z = 0.25f;
+			hr = pSprite->Draw( g_pTexAnHealthGauge, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempRect.left = 0;
+			tempRect.right = (LONG)( (float)g_ImgInfoAnHealthBar.Width / (float)acIter->second.m_PlayerInfo.GetCharacterInfo().GetMaxHealth()  *
+				(float)( acIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() ) );
+			tempRect.top = 0;
+			tempRect.bottom = g_ImgInfoHealthGauge.Height;
+			tempPos2.x = tempPos.x + 58;
+			tempPos2.y = tempPos.y + 10;
+			tempPos2.z = 0.125f;
+			hr = pSprite->Draw( g_pTexAnHealthBar, &tempRect, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempPos2.x = tempPos.x + 50;
+			tempPos2.y = tempPos.y + 27;
+			tempPos2.z = 0.25f;
+			hr = pSprite->Draw( g_pTexAnEnergyGauge, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempRect.left = 0;
+			tempRect.right = (LONG)( (float)g_ImgInfoAnEnergyBar.Width / (float)acIter->second.m_PlayerInfo.GetCharacterInfo().GetMaxEnergy()  *
+				(float)( acIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy() ) );
+			tempRect.top = 0;
+			tempRect.bottom = g_ImgInfoAnEnergyBar.Height;
+			tempPos2.x = tempPos.x + 58;
+			tempPos2.y = tempPos.y + 30;
+			tempPos2.z = 0.125f;
+			hr = pSprite->Draw( g_pTexAnEnergyBar, &tempRect, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			tempPos2.x = tempPos.x + 8;
+			tempPos2.y = tempPos.y + 6;
+			tempPos2.z = 0.0f;
+			hr = pSprite->Draw( tempTexture, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
+
+			txtHelper.SetInsertionPos( (int)( tempPos.x + 64.0f ), (int)tempPos.y - 5 );
+			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
+			_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
+			txtHelper.DrawTextLine( tempStr );
 		}
-
-		if( g_ThisClient.m_PlayerInfo.GetTeamNum() == acIter->second.m_PlayerInfo.GetTeamNum() )
-		{
-			tempPos.x = TX( tempFriendWidth );
-			tempPos.y = TY( tempFriendHeight );
-			tempFriendHeight += 60.0f;
-		}
-		else
-		{
-			tempPos.x = TX( tempEnemyWidth );
-			tempPos.y = TY( tempEnemyHeight );
-			tempEnemyHeight += 60.0f;
-		}
-		tempPos.z = 0.375f;
-		hr = pSprite->Draw( g_pTexAnCharInfoFrame, NULL, NULL, &tempPos, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempPos2.x = tempPos.x + 50;
-		tempPos2.y = tempPos.y + 7;
-		tempPos2.z = 0.25f;
-		hr = pSprite->Draw( g_pTexAnHealthGauge, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempRect.left = 0;
-		tempRect.right = (LONG)((float)g_ImgInfoAnHealthBar.Width  /  (float)acIter->second.m_PlayerInfo.GetCharacterInfo().GetMaxHealth()  *
-			(float)(acIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth()));
-		tempRect.top = 0;
-		tempRect.bottom = g_ImgInfoHealthGauge.Height;
-		tempPos2.x = tempPos.x + 58;
-		tempPos2.y = tempPos.y + 10;
-		tempPos2.z = 0.125f;
-		hr = pSprite->Draw( g_pTexAnHealthBar, &tempRect, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempPos2.x = tempPos.x + 50;
-		tempPos2.y = tempPos.y + 27;
-		tempPos2.z = 0.25f;
-		hr = pSprite->Draw( g_pTexAnEnergyGauge, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempRect.left = 0;
-		tempRect.right = (LONG)((float)g_ImgInfoAnEnergyBar.Width  /  (float)acIter->second.m_PlayerInfo.GetCharacterInfo().GetMaxEnergy()  *
-			(float)(acIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy()));
-		tempRect.top = 0;
-		tempRect.bottom = g_ImgInfoAnEnergyBar.Height;
-		tempPos2.x = tempPos.x + 58;
-		tempPos2.y = tempPos.y + 30;
-		tempPos2.z = 0.125f;
-		hr = pSprite->Draw( g_pTexAnEnergyBar, &tempRect, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		tempPos2.x = tempPos.x + 8;
-		tempPos2.y = tempPos.y + 6;
-		tempPos2.z = 0.0f;
-		hr = pSprite->Draw( tempTexture, NULL, NULL, &tempPos2, D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f ) );
-
-		txtHelper.SetInsertionPos( (int)(tempPos.x + 64.0f), (int)tempPos.y - 5 );
-		txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-		_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
-		txtHelper.DrawTextLine( tempStr );
 	}
-	WRAP_LEAVE_CS( &g_CS, 42 );
 
 
 	tempPos.x = TX( 226 );

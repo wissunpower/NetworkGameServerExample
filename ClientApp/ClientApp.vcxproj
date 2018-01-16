@@ -120,7 +120,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>./include;../Matchless/include;../RD_DXUT/include;../RD_Graphic/include;../RD_Network/include;../SDK/DirectX/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./include;../Matchless/include;../RD_DXUT/include;../RD_Graphic/include;../RD_Network/include;../SDK/DirectX/include;../Library/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -131,8 +131,8 @@
       <UseFullPaths>false</UseFullPaths>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Matchless.lib;RD_DXUT.lib;RD_Graphic.lib;RD_Network.lib;dsound.lib;dxerr.lib;d3dx9d.lib;d3dx10d.lib;version.lib;imm32.lib;comctl32.lib;winmm.lib;ws2_32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>../Matchless/lib/$(Platform)/$(Configuration);../RD_DXUT/lib/$(Platform)/$(Configuration);../RD_Graphic/lib/$(Platform)/$(Configuration);../RD_Network/lib/$(Platform)/$(Configuration);../SDK/DirectX/lib/x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>Matchless.lib;RD_DXUT.lib;RD_Graphic.lib;RD_Network.lib;Library.lib;dsound.lib;dxerr.lib;d3dx9d.lib;d3dx10d.lib;version.lib;imm32.lib;comctl32.lib;winmm.lib;ws2_32.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../Matchless/lib/$(Platform)/$(Configuration);../RD_DXUT/lib/$(Platform)/$(Configuration);../RD_Graphic/lib/$(Platform)/$(Configuration);../RD_Network/lib/$(Platform)/$(Configuration);../SDK/DirectX/lib/x64;../$(Platform)/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
     </Link>
