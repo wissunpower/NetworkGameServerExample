@@ -22,6 +22,7 @@
     <ClCompile Include="source\cMonitor.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\cRingBuffer.cpp" />
     <ClCompile Include="source\cSingleton.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
     <ClCompile Include="source\Library.cpp" />
@@ -31,6 +32,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\cMonitor.h" />
+    <ClInclude Include="include\cRingBuffer.h" />
     <ClInclude Include="include\cSingleton.h" />
     <ClInclude Include="include\linkopt.h" />
     <ClInclude Include="include\stdafx.h" />
