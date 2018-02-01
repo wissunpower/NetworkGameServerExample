@@ -25,6 +25,7 @@
     <ClCompile Include="source\cRingBuffer.cpp" />
     <ClCompile Include="source\cSingleton.cpp" />
     <ClCompile Include="source\cThread.cpp" />
+    <ClCompile Include="source\cVBuffer.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
     <ClCompile Include="source\Library.cpp" />
     <ClCompile Include="source\stdafx.cpp">
@@ -36,6 +37,7 @@
     <ClInclude Include="include\cRingBuffer.h" />
     <ClInclude Include="include\cSingleton.h" />
     <ClInclude Include="include\cThread.h" />
+    <ClInclude Include="include\cVBuffer.h" />
     <ClInclude Include="include\linkopt.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\targetver.h" />
