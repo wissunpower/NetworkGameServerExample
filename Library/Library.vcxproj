@@ -34,6 +34,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\cMonitor.h" />
+    <ClInclude Include="include\cQueue.h" />
     <ClInclude Include="include\cRingBuffer.h" />
     <ClInclude Include="include\cSingleton.h" />
     <ClInclude Include="include\cThread.h" />
