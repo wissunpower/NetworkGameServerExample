@@ -22,14 +22,14 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 	getpeername( currentClient.m_NetSystem.GetSocket(), (SOCKADDR*)&clientaddr, &addrlen );
 
 
-	printf( "[ Connect client ] : IP address = %s, port number = %d\n", inet_ntoa( clientaddr.sin_addr ), ntohs( clientaddr.sin_port ) );
+	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + wsp::to( inet_ntoa( clientaddr.sin_addr ) ) + _T( ", port number = " ) + wsp::to( ntohs( clientaddr.sin_port ) ) );
 
 	// Initialize server<->client connection
 	currentClient.m_NetSystem.SetID( currentID );
 	if( 0 == currentID )				// failed case
 	{
 		SendDataFSV( currentClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_LOGIN_FAILED, 0, NULL );
-		printf( "[ Error ] : Failed get client ID number\n" );
+		WriteLog( _T( "[ Error ] : Failed get client ID number" ), { eLogInfoType::LOG_ERROR_HIGH } );
 		closesocket( currentClient.m_NetSystem.GetSocket() );
 		return 0;
 	}
@@ -370,7 +370,7 @@ DWORD WINAPI ProcessClient( LPVOID arg )
 		ReturnClientID( currentID );
 	}
 
-	printf( "[ Disconnect client ] : IP address = %s, port number = %d\n", inet_ntoa( clientaddr.sin_addr ), ntohs( clientaddr.sin_port ) );
+	WriteLog( tstring{ _T( "[ Disconnect client ] : IP address = " ) } + wsp::to( inet_ntoa( clientaddr.sin_addr ) ) + _T( ", port number = " ) + wsp::to( ntohs( clientaddr.sin_port ) ) );
 
 	closesocket( currentClient.m_NetSystem.GetSocket() );
 
@@ -383,6 +383,7 @@ int main( int argc, char * argv[] )
 {
 	CMiniDump::Begin();
 
+	InitLog();
 
 	WSADATA		wsa;
 	if( 0 != WSAStartup( MAKEWORD( 2, 2 ), &wsa ) )
@@ -392,13 +393,13 @@ int main( int argc, char * argv[] )
 	// create timer thread step
 	if( NULL == CreateThread( NULL, 0, TimerThread, (LPVOID)&g_Timer, 0, NULL ) )
 	{
-		printf( "[ Error ] : Failed create thread!\n" );
+		WriteLog( _T( "[ Error ] : Failed create thread!" ), { eLogInfoType::LOG_ERROR_HIGH } );
 	}
 
 	// create game process thread step
 	if( NULL == CreateThread( NULL, 0, GameProcessThread, NULL, 0, NULL ) )
 	{
-		printf( "[ Error ] : Failed create thread!\n" );
+		WriteLog( _T( "[ Error ] : Failed create thread!" ), { eLogInfoType::LOG_ERROR_HIGH } );
 	}
 
 
@@ -462,7 +463,7 @@ int main( int argc, char * argv[] )
 			if ( !g_IsAcceptable )			// Already start the game.
 			{
 				SendDataFSV( clientSocket, 0, (unsigned int)Matchless::FSTC_LOGIN_FAILED, 0, NULL );
-				printf( "[ Error ] : Already start the game.\n" );
+				WriteLog( _T( "[ Error ] : Already start the game." ), { eLogInfoType::LOG_ERROR_NORMAL } );
 				closesocket( clientSocket );
 				continue;
 			}
@@ -471,7 +472,7 @@ int main( int argc, char * argv[] )
 		// create thread step
 		if( NULL == CreateThread( NULL, 0, ProcessClient, (LPVOID)clientSocket, 0, &ThreadID ) )
 		{
-			printf( "[ Error ] : Failed create thread!\n" );
+			WriteLog( _T( "[ Error ] : Failed create thread!" ), { eLogInfoType::LOG_ERROR_HIGH } );
 			closesocket( clientSocket );
 		}
 	}
@@ -482,6 +483,7 @@ int main( int argc, char * argv[] )
 
 	WSACleanup();
 
+	CloseLog();
 
 	CMiniDump::End();
 

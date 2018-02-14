@@ -9,7 +9,9 @@
 
 #include	<winsock2.h>
 
-#include	<cMonitor.h>
+#include	"wspstr.h"
+#include	"cMonitor.h"
+#include	"cLog.h"
 #include	"ErrorHandler.h"
 #include	"CMiniDump.h"
 
@@ -72,6 +74,10 @@ int SendDataFSV( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAd
 bool PrintPacket( const CNetMessage & msg );
 
 
+int InitLog();
+int WriteLog( const std::initializer_list< tstring >& sl, const std::initializer_list< eLogInfoType >& tl = { eLogInfoType::LOG_INFO_LOW } );
+int WriteLog( const tstring& s, const std::initializer_list< eLogInfoType >& tl = { eLogInfoType::LOG_INFO_LOW } );
+int CloseLog();
 
 
 #endif		// __SERVERAPPROOT_H_92mxm_vmd9w_82kd9__

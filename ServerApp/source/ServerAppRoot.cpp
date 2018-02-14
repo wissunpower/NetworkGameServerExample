@@ -43,7 +43,7 @@ DWORD WINAPI TimerThread( LPVOID arg )
 
 		if( 0 == g_Timer.GetTick() % 300 )
 		{
-			printf( "Timer Thread Run\n" );
+			WriteLog( _T( "Timer Thread Run" ) );
 		}
 
 		while( !g_SkillMessageList.empty() )
@@ -95,7 +95,7 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 
 		if( 0 == g_Timer.GetTick() % 300 )
 		{
-			printf( "Game Process Thread Run\n" );
+			WriteLog( _T( "Game Process Thread Run" ), { eLogInfoType::LOG_INFO_LOW } );
 		}
 
 		cMonitor::Owner lock{ g_ClientListMonitor };
@@ -201,27 +201,27 @@ int OutputServerInitialInfo( const SOCKADDR_IN & aAddrInfo, const SOCKET aListen
 	HOSTENT *	thisSystem = gethostbyaddr( (char*)&(aAddrInfo.sin_addr), 4, AF_INET );
 	if( NULL == thisSystem )
 	{
-		printf( "-- Failed get server information.\n" );
+		WriteLog( _T( "-- Failed get server information." ) );
 		return -1;
 	}
 
 	addrlen = sizeof( tempAddr_in );
 	if( SOCKET_ERROR == getsockname( aListenSocket, (SOCKADDR*)&tempAddr_in, &addrlen ) )
 	{
-		printf( "-- Failed get server information.\n" );
+		WriteLog( _T( "-- Failed get server information." ) );
 		return -1;
 	}
 
-	printf( "-- Succeed launch server.\n" );
+	WriteLog( _T( "-- Succeed launch server." ) );
 
-	printf( "-- Server IP address : %s\n", inet_ntoa( tempAddr_in.sin_addr ) );
+	WriteLog( tstring{ _T( "-- Server IP address : " ) } + wsp::to( inet_ntoa( tempAddr_in.sin_addr ) ) );
 	//for( int i = 0 ; thisSystem->h_addr_list[ i ] != 0 ; ++i )
 	//{
 	//	tempAddr.s_addr = *(u_long*)thisSystem->h_addr_list[ i ];
-	//	printf( "\t#%d\t%s\n", i, inet_ntoa( tempAddr ) );
+	//	WriteLog( tstring{ _T( "\t#" ) } + wsp::to( i ) + _T( "\t" ) + inet_ntoa( tempAddr ) );
 	//}
 
-	printf( "-- Server port number : %d\n", ntohs( aAddrInfo.sin_port ) );
+	WriteLog( tstring{ _T( "-- Server port number : " ) } + wsp::to( ntohs( aAddrInfo.sin_port ) ) );
 
 	return 0;
 }
@@ -1366,4 +1366,55 @@ bool PrintPacket( const CNetMessage & msg )
 
 
 	return	true;
+}
+
+
+int InitLog()
+{
+	sLogConfig LogConfig;
+	LogConfig.s_eLogFileType = eLogFileType::FILETYPE_TEXT;
+	//LogConfig.s_hWnd = hWnd;
+	LogConfig.s_sLogFileName = _T( "ServerApp" );
+
+	//LogConfig.s_vLogInfoTypes[ static_cast<size_t>( eLogStorageType::STORAGE_OUTPUTWND ) ] = eLogInfoType::LOG_ALL;
+	LogConfig.s_vLogInfoTypes[ static_cast<size_t>( eLogStorageType::STORAGE_FILE ) ] = eLogInfoType::LOG_ALL;
+
+	if ( !INIT_LOG( LogConfig ) )
+	{
+		return 1;
+	}
+
+	return 0;
+}
+
+int WriteLog( const std::initializer_list< tstring >& sl, const std::initializer_list< eLogInfoType >& tl /*= { eLogInfoType::LOG_INFO_LOW }*/ )
+{
+	tstring sLog;
+	for ( auto s : sl )
+	{
+		sLog += s;
+	}
+
+	eLogInfoType eType { eLogInfoType::LOG_NONE };
+	for ( auto t : tl )
+	{
+		eType = eType | t;
+	}
+
+	_tprintf( _T( "%s\n" ), sLog.c_str() );
+	LOG( eType, sl );
+
+	return 0;
+}
+
+int WriteLog( const tstring& s, const std::initializer_list< eLogInfoType >& tl /*= { eLogInfoType::LOG_INFO_LOW }*/ )
+{
+	return WriteLog( { s }, tl );
+}
+
+int CloseLog()
+{
+	CLOSE_LOG();
+
+	return 0;
 }
