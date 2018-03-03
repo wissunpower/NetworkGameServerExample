@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\cConnection.cpp" />
+    <ClCompile Include="source\cIOCP.cpp" />
+    <ClCompile Include="source\cIocpServer.cpp" />
     <ClCompile Include="source\cLog.cpp" />
     <ClCompile Include="source\cMonitor.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -37,6 +40,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\wspstr.h" />
+    <ClInclude Include="include\cConnection.h" />
+    <ClInclude Include="include\cIOCP.h" />
+    <ClInclude Include="include\cIocpServer.h" />
+    <ClInclude Include="include\cIocpServer_Impl.h" />
     <ClInclude Include="include\cLog.h" />
     <ClInclude Include="include\cMonitor.h" />
     <ClInclude Include="include\cQueue.h" />
@@ -44,6 +51,7 @@
     <ClInclude Include="include\cSingleton.h" />
     <ClInclude Include="include\cThread.h" />
     <ClInclude Include="include\cVBuffer.h" />
+    <ClInclude Include="include\LibraryDef.h" />
     <ClInclude Include="include\linkopt.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\targetver.h" />
@@ -145,7 +153,7 @@ copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(Target
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ws2_32.lib;Mswsock.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetFileName)" "..\ClientApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"
