@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkGameServerExample", "NetworkGameServerExample\NetworkGameServerExample.vcxproj", "{0525DDA9-9D71-495B-A90A-AABED20ADF23}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -9,6 +9,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NetworkGameServerExample", 
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Library", "Library\Library.vcxproj", "{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChatServerDemo", "ChatServerDemo\ChatServerDemo.vcxproj", "{1675D551-A157-46E4-9B42-A52371CF21DE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9} = {6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +39,14 @@ Global
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|x64.Build.0 = Release|x64
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|x86.ActiveCfg = Release|Win32
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|x86.Build.0 = Release|Win32
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Debug|x64.ActiveCfg = Debug|x64
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Debug|x64.Build.0 = Debug|x64
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Debug|x86.ActiveCfg = Debug|Win32
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Debug|x86.Build.0 = Debug|Win32
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Release|x64.ActiveCfg = Release|x64
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Release|x64.Build.0 = Release|x64
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Release|x86.ActiveCfg = Release|Win32
+		{1675D551-A157-46E4-9B42-A52371CF21DE}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
