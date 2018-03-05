@@ -4,10 +4,6 @@
 
 
 
-#include	<winsock2.h>
-
-
-
 typedef LARGE_INTEGER	TimeUnit;
 
 

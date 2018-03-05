@@ -1,7 +1,6 @@
 
+#include	"stdafx.h"
 #include	"ServerAppRoot.h"
-
-#include	<stdio.h>
 
 
 

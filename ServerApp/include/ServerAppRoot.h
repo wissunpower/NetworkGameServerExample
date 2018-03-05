@@ -4,14 +4,11 @@
 
 
 
-#include	<list>
-#include	<map>
-
-#include	<winsock2.h>
-
 #include	"wspstr.h"
 #include	"cMonitor.h"
 #include	"cLog.h"
+#include	"cSingleton.h"
+#include	"cIOCP.h"
 #include	"ErrorHandler.h"
 #include	"CMiniDump.h"
 

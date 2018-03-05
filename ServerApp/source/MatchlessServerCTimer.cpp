@@ -1,7 +1,6 @@
 
+#include	"stdafx.h"
 #include	"MatchlessServerCTimer.h"
-
-#include	<stdio.h>
 
 
 
