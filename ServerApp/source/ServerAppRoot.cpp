@@ -6,6 +6,9 @@
 
 MatchlessServer::CTimer							g_Timer( 60 );
 
+std::map< SOCKET, unsigned int >				g_mClientID;				// < SOCKET, Client ID >
+cMonitor										g_csClientID;
+
 std::list< unsigned int >						g_ReuseClientIDlist;
 unsigned int									g_LargestClientID = 0;
 std::map< unsigned int, Matchless::CClient >	g_ClientList;			// < ID, SOCKET >

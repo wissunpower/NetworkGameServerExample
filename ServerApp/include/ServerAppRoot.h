@@ -39,6 +39,9 @@ namespace	MatchlessServer
 
 extern MatchlessServer::CTimer							g_Timer;
 
+extern std::map< SOCKET, unsigned int >				g_mClientID;				// < SOCKET, Client ID >
+extern cMonitor										g_csClientID;
+
 extern std::list< unsigned int >						g_ReuseClientIDlist;
 extern unsigned int										g_LargestClientID;
 extern std::map< unsigned int, Matchless::CClient >		g_ClientList;			// < ID, SOCKET >
@@ -69,6 +72,11 @@ bool IsNowCasting( const unsigned int aID, const bool aIsCancel );
 int SendDataFSV( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData );
 
 bool PrintPacket( const CNetMessage & msg );
+
+
+DWORD WINAPI ProcessClient( LPVOID arg );
+DWORD WINAPI ProcessClient_Accept( LPVOID arg );
+DWORD WINAPI ProcessClient_Recv( const SOCKET socket, const CNetMessage& message );
 
 
 int InitLog();

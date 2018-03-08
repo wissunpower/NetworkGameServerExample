@@ -24,6 +24,8 @@ public:
 
 	void SetType( const unsigned int aType );
 
+	void SetData( const char* buf, const size_t len );
+
 	int SendData( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData );
 	int ReceiveData( SOCKET socket, int aFlags );
 

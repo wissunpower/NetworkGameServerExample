@@ -1,5 +1,7 @@
 
 #include	"CNetMessage.h"
+#include	<vector>
+#include	"LibraryDef.h"
 
 
 CNetMessage::CNetMessage( void ) : m_type( 0 ), m_addDataLen( 0 ), m_pAddData( NULL )
@@ -93,6 +95,51 @@ void CNetMessage::SetType( const unsigned int aType )
 }
 
 
+void CNetMessage::SetData( const char* buf, const size_t len )
+{
+	if ( len < sizeof( *this ) )
+	{
+		return;
+	}
+
+	if( m_pAddData )
+	{
+		delete	[] m_pAddData;
+		m_pAddData = NULL;
+	}
+
+
+	size_t index = 0;
+	size_t bufSize = 0;
+	size_t tempSize= 0;
+
+	tempSize = PACKET_SIZE_LENGTH;
+	memcpy_s( &bufSize, tempSize, buf + index, tempSize );
+	index += tempSize;
+
+	tempSize = sizeof( m_type );
+	memcpy_s( &m_type, tempSize, buf + index, tempSize );
+	index += tempSize;
+
+	tempSize = sizeof( m_addDataLen );
+	memcpy_s( &m_addDataLen, tempSize, buf + index, tempSize );
+	index += tempSize;
+
+	m_pAddData = NULL;
+	m_pAddData = new char[ m_addDataLen ];
+	if( m_pAddData && len >= m_addDataLen )
+	{
+		memcpy_s( m_pAddData, m_addDataLen, buf + index, m_addDataLen );
+		index += m_addDataLen;
+	}
+	else
+	{
+		m_pAddData = NULL;
+		m_addDataLen = 0;
+	}
+}
+
+
 int CNetMessage::SendData( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData )
 {
 	int	errorCode;
@@ -120,26 +167,49 @@ int CNetMessage::SendData( SOCKET socket, int aFlags, unsigned int aType, unsign
 		m_addDataLen = 0;
 	}
 
-	// Send application protocol header
-	forwardReturnValue = send( socket, (char*)this, sizeof( *this ), aFlags );
-	if( forwardReturnValue == SOCKET_ERROR )
-	{
-		errorCode = WSAGetLastError();
-		return ( forwardReturnValue );
-	}
+	size_t index = 0;
+	std::vector< char > buf( PACKET_SIZE_LENGTH + sizeof( m_type ) + sizeof( m_addDataLen ) + aAddDataLen );
+	size_t bufSize = buf.size();
+	size_t tempSize= 0;
 
-	// Send application protocol addtional data
-	backwardReturnValue = send( socket, (char*)m_pAddData, m_addDataLen, aFlags );
-	if( backwardReturnValue == SOCKET_ERROR )
-	{
-		errorCode = WSAGetLastError();
-	}
-	else
-	{
-		backwardReturnValue += forwardReturnValue;
-	}
+	tempSize = PACKET_SIZE_LENGTH;
+	memcpy_s( buf.data() + index, tempSize, &bufSize, tempSize );
+	index += tempSize;
 
-	return ( backwardReturnValue );
+	tempSize = sizeof( m_type );
+	memcpy_s( buf.data() + index, tempSize, &m_type, tempSize );
+	index += tempSize;
+
+	tempSize = sizeof( m_addDataLen );
+	memcpy_s( buf.data() + index, tempSize, &m_addDataLen, tempSize );
+	index += tempSize;
+
+	tempSize = aAddDataLen;
+	memcpy_s( buf.data() + index, tempSize, m_pAddData, tempSize );
+	index += tempSize;
+
+	return send( socket, buf.data(), buf.size(), aFlags );
+
+	//// Send application protocol header
+	//forwardReturnValue = send( socket, (char*)this, sizeof( *this ), aFlags );
+	//if( forwardReturnValue == SOCKET_ERROR )
+	//{
+	//	errorCode = WSAGetLastError();
+	//	return ( forwardReturnValue );
+	//}
+
+	//// Send application protocol addtional data
+	//backwardReturnValue = send( socket, (char*)m_pAddData, m_addDataLen, aFlags );
+	//if( backwardReturnValue == SOCKET_ERROR )
+	//{
+	//	errorCode = WSAGetLastError();
+	//}
+	//else
+	//{
+	//	backwardReturnValue += forwardReturnValue;
+	//}
+
+	//return ( backwardReturnValue );
 
 
 	//char * tempBuffer = new char[ sizeof( CNetMessage ) + (sizeof( char ) * m_addDataLen) ];
@@ -169,35 +239,74 @@ int CNetMessage::ReceiveData( SOCKET socket, int aFlags )
 	int forwardReturnValue;
 	int backwardReturnValue;
 
-	// Receive application protocol header
-	forwardReturnValue = RD_Network::recvn( socket, (char*)this, sizeof( *this ), aFlags );
-	if( forwardReturnValue == SOCKET_ERROR )
+	size_t bufSize = 0;
+	forwardReturnValue = RD_Network::recvn( socket, reinterpret_cast<char*>( &bufSize ), PACKET_SIZE_LENGTH, aFlags );
+	if( forwardReturnValue == SOCKET_ERROR || PACKET_SIZE_LENGTH > bufSize )
 	{
 		errorCode = WSAGetLastError();
 		return ( forwardReturnValue );
 	}
 
+	std::vector< char > buf( bufSize - PACKET_SIZE_LENGTH );
+	backwardReturnValue = RD_Network::recvn( socket, buf.data(), buf.size(), aFlags );
+	if ( backwardReturnValue == SOCKET_ERROR )
+	{
+		return SOCKET_ERROR;
+	}
+
+	size_t index = 0;
+	size_t tempSize = 0;
+
+	tempSize = sizeof( m_type );
+	memcpy_s( &m_type, tempSize, buf.data() + index, tempSize );
+	index += tempSize;
+
+	tempSize = sizeof( m_addDataLen );
+	memcpy_s( &m_addDataLen, tempSize, buf.data() + index, tempSize );
+	index += tempSize;
+
 	m_pAddData = NULL;
 	m_pAddData = new char[ m_addDataLen ];
-	if( m_pAddData )
+	if( !m_pAddData )
 	{
-		backwardReturnValue = RD_Network::recvn( socket, (char*)m_pAddData, m_addDataLen, aFlags );
-	}
-	else
-	{
-		m_pAddData = NULL;
-		m_addDataLen = 0;
-		backwardReturnValue = 0;
+		return SOCKET_ERROR;
 	}
 
-	if( backwardReturnValue == SOCKET_ERROR )
-	{
-		errorCode = WSAGetLastError();
-	}
-	else
-	{
-		backwardReturnValue += forwardReturnValue;
-	}
+	tempSize = m_addDataLen;
+	memcpy_s( m_pAddData, tempSize, buf.data() + index, tempSize );
+	index += tempSize;
 
-	return backwardReturnValue;
+	return ( forwardReturnValue + backwardReturnValue );
+
+	//// Receive application protocol header
+	//forwardReturnValue = RD_Network::recvn( socket, (char*)this, sizeof( *this ), aFlags );
+	//if( forwardReturnValue == SOCKET_ERROR )
+	//{
+	//	errorCode = WSAGetLastError();
+	//	return ( forwardReturnValue );
+	//}
+
+	//m_pAddData = NULL;
+	//m_pAddData = new char[ m_addDataLen ];
+	//if( m_pAddData )
+	//{
+	//	backwardReturnValue = RD_Network::recvn( socket, (char*)m_pAddData, m_addDataLen, aFlags );
+	//}
+	//else
+	//{
+	//	m_pAddData = NULL;
+	//	m_addDataLen = 0;
+	//	backwardReturnValue = 0;
+	//}
+
+	//if( backwardReturnValue == SOCKET_ERROR )
+	//{
+	//	errorCode = WSAGetLastError();
+	//}
+	//else
+	//{
+	//	backwardReturnValue += forwardReturnValue;
+	//}
+
+	//return backwardReturnValue;
 }

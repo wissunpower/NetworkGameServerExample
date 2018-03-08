@@ -178,6 +178,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\cConnectionManager.cpp" />
+    <ClCompile Include="source\cIocpMatchlessServer.cpp" />
     <ClCompile Include="source\MatchlessServerCTimer.cpp" />
     <ClCompile Include="source\ServerAppRoot.cpp" />
     <ClCompile Include="source\serverapp_main.cpp" />
@@ -189,6 +191,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\cConnectionManager.h" />
+    <ClInclude Include="include\cIocpMatchlessServer.h" />
     <ClInclude Include="include\MatchlessServerCTimer.h" />
     <ClInclude Include="include\ServerAppRoot.h" />
     <ClInclude Include="include\stdafx.h" />
