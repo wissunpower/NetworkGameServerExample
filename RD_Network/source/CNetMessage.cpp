@@ -97,7 +97,7 @@ void CNetMessage::SetType( const unsigned int aType )
 
 void CNetMessage::SetData( const char* buf, const size_t len )
 {
-	if ( len < sizeof( *this ) )
+	if ( len < PACKET_SIZE_LENGTH )
 	{
 		return;
 	}
