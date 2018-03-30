@@ -1,8 +1,11 @@
 
+#include	"stdafx.h"
 #include	"ClientAppRoot.h"
 
 #include	"NetworkHandler.h"
 #include	"DXDeviceHandler.h"
+#include	"cPacket.h"
+#include	"cException.h"
 
 
 float	tempFloat = 0.0f;
@@ -410,27 +413,28 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 
 			tempMatrix = g_ThisClient.m_PlayerInfo.GetTransform();
 
-			memcpy( buf, &tempMatrix, sizeof( tempMatrix ) );				bufIndex = sizeof( tempMatrix );
-
-			tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAME_MOVE_POSITION, bufIndex, buf );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_GAME_MOVE_POSITION );
+			Matchless::Encode( oPacket, tempMatrix );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 
 			g_IsUpdateMovePosition = false;
 		}
 		if( g_IsUpdateMoveAnimation )
 		{
-			char					buf[ 512 ];
-			unsigned int			bufIndex = 0;
-			CNetMessage				tempMessage;
-			std::map< UINT, SAniTrackInfo >::const_iterator		atIter;
+			cAniTrackInfo	aniInfo;
 
-
-			for( atIter = g_ThisCharacter.GetAniTrackMap().begin()  ;  atIter != g_ThisCharacter.GetAniTrackMap().end()  ;  ++atIter )
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_GAME_MOVE_ANIMATION );
+			oPacket.Encode4u( g_ThisCharacter.GetAniTrackMap().size() );
+			for( auto atIter = g_ThisCharacter.GetAniTrackMap().begin()  ;  atIter != g_ThisCharacter.GetAniTrackMap().end()  ;  ++atIter )
 			{
-				memcpy( buf + bufIndex, &(atIter->first), sizeof( atIter->first ) );	bufIndex += sizeof( atIter->first );
-				memcpy( buf + bufIndex, &(atIter->second), sizeof( atIter->second ) );	bufIndex += sizeof( atIter->second );
+				oPacket.Encode4u( atIter->first );
+				SetAniTrackInfo( aniInfo, atIter->second );
+				Encode( oPacket, aniInfo );
 			}
 
-			tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAME_MOVE_ANIMATION, bufIndex, buf );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 
 			g_IsUpdateMoveAnimation = false;
 		}
@@ -700,11 +704,13 @@ void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void * pUs
 
 
 void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, void * pUserContext )
-{
+try {
 	SOCKADDR_IN		serveraddr;
 	METHOD			NewSkinningMethod;
 	CNetMessage		tempMessage;
-	DWORD			ThreadID;
+	cIPacket					iPacket;
+	Matchless::ENetMessageType	nMsgType;
+	DWORD						ThreadID;
 
 	bool			bCreateSocketFailed;
 	bool			bConnectToServerFailed;
@@ -771,9 +777,9 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 			(bConnectToServerFailed =
 				(SOCKET_ERROR == connect( g_ThisClient.m_NetSystem.GetSocket(), (SOCKADDR*)&serveraddr, sizeof( serveraddr ) )))  ||
 			(bReceiveLoginDataFailed =
-				(SOCKET_ERROR == tempMessage.ReceiveData( g_ThisClient.m_NetSystem.GetSocket(), 0 )))  ||
+				(SOCKET_ERROR == iPacket.Recv( g_ThisClient.m_NetSystem.GetSocket() )))  ||
 			(bLoginFailed =
-				(Matchless::FSTC_LOGIN_FAILED == (Matchless::ENetMessageType)tempMessage.GetType())) )		// Failed connect to server
+				(Matchless::FSTC_LOGIN_FAILED == ( nMsgType = static_cast<Matchless::ENetMessageType>( iPacket.Decode4u() ) ))) )		// Failed connect to server
 		{
 			closesocket( g_ThisClient.m_NetSystem.GetSocket() );
 
@@ -806,10 +812,10 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 			bool						tempbRM;
 			Matchless::ECharacterClass	tempCC;
 
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );								bufIndex = sizeof( tempID );
-			memcpy( &tempTeamNo, tempMessage.GetpAddData() + bufIndex, sizeof( tempTeamNo ) );			bufIndex += sizeof( tempTeamNo );
-			memcpy( &tempbRM, tempMessage.GetpAddData() + bufIndex, sizeof( tempbRM ) );				bufIndex += sizeof( tempbRM );
-			memcpy( &tempCC, tempMessage.GetpAddData() + bufIndex, sizeof( tempCC ) );					bufIndex += sizeof( tempCC );
+			tempID = iPacket.Decode4u();
+			tempTeamNo = static_cast<unsigned short>( iPacket.Decode4u() );
+			tempbRM = iPacket.DecodeBool();
+			tempCC = static_cast<Matchless::ECharacterClass>( iPacket.Decode4u() );
 			g_ThisClient.m_NetSystem.SetID( tempID );
 			g_ThisClient.m_PlayerInfo.SetTeamNum( tempTeamNo );
 			g_ThisClient.m_PlayerInfo.SetbRoomMaster( tempbRM );
@@ -834,11 +840,19 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		break;
 
 	case IDC_WAIT_PLAYSTART:
-		tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAMESTART_REQUEST, 0, NULL );
+		{
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_GAMESTART_REQUEST );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
+		}
 		break;
 
 	case IDC_WAIT_QUIT:
-		tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_LOGOUT_INFORM, 0, NULL );
+		{
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_LOGOUT_INFORM );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
+		}
 		DXUTShutdown();
 		break;
 
@@ -847,8 +861,11 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 			cMonitor::Owner lock{ g_Monitor };
 			g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( (Matchless::ECharacterClass)(unsigned int)((CDXUTComboBox*)pControl)->GetSelectedData() );
 			tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
-			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
-									sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
+
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_CHARCLASS_UPDATE );
+			oPacket.Encode4u( tempCharacterClass );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -856,8 +873,11 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		{
 			cMonitor::Owner lock{ g_Monitor };
 			g_ThisClient.m_PlayerInfo.SetTeamNum( tempTN = (unsigned short int)((CDXUTComboBox*)pControl)->GetSelectedData() );
-			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_TEAM_UPDATE,
-									sizeof( tempTN ),  (char*)&tempTN  );
+
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_TEAM_UPDATE );
+			oPacket.Encode4u( tempTN );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 		}
 		break;
 		
@@ -865,8 +885,11 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		{
 			cMonitor::Owner lock{ g_Monitor };
 			g_CurrentMapKind = (0 == g_CurrentMapKind) ? MAP_KIND_COUNT - 1 : g_CurrentMapKind - 1 ;
-			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
-									sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
+
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_MAP_UPDATE );
+			oPacket.Encode4u( g_CurrentMapKind );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -874,13 +897,20 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 		{
 			cMonitor::Owner lock{ g_Monitor };
 			g_CurrentMapKind = ((MAP_KIND_COUNT - 1) == g_CurrentMapKind) ? 0 : g_CurrentMapKind + 1 ;
-			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MAP_UPDATE,
-									sizeof( g_CurrentMapKind ),  (char*)&g_CurrentMapKind  );
+
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_MAP_UPDATE );
+			oPacket.Encode4u( g_CurrentMapKind );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 		}
 		break;
 
 	case IDC_PLAY_PLAYQUIT:
-		tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAMEOUT_REQUEST, 0, NULL );
+		{
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_GAMEOUT_REQUEST );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
+		}
 		break;
 
 	case IDC_ADJUST_PASS:
@@ -888,12 +918,39 @@ void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, 
 			cMonitor::Owner lock{ g_Monitor };
 			ChangeAndInformMainStepState( g_ThisClient, Matchless::EMSS_Wait );
 			tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
-			tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_CHARCLASS_UPDATE,
-									sizeof( tempCharacterClass ),  (char*)&tempCharacterClass  );
+
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FCTS_CHARCLASS_UPDATE );
+			oPacket.Encode4u( tempCharacterClass );
+			oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 		}
 		break;
 
 	}
+}
+catch ( const cException& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+}
+catch ( const std::runtime_error& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+}
+catch ( const std::exception& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+}
+catch ( ... ) {
+	_tcsncpy( g_Notice, _T( "Unknown Exception" ), 512 );
 }
 
 

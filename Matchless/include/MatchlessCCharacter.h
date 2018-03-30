@@ -49,7 +49,7 @@ namespace	Matchless
 		const unsigned int GetCurrentHealth( void ) const		{ return m_CurrentHealth; }
 		const unsigned int GetMaxEnergy( void ) const			{ return m_MaxEnergy; }
 		const unsigned int GetCurrentEnergy( void ) const		{ return m_CurrentEnergy; }
-		const unsigned int GetPhysicalDamage( void )
+		const unsigned int GetPhysicalDamage( void ) const
 		{
 			float	tempRate = 1.0f;
 
@@ -65,7 +65,7 @@ namespace	Matchless
 
 			return	(unsigned int)((float)m_PhysicalDamage * tempRate);
 		}
-		const unsigned int GetPhysicalArmor( void )
+		const unsigned int GetPhysicalArmor( void ) const
 		{
 			float	tempRate = 1.0f;
 
@@ -81,7 +81,7 @@ namespace	Matchless
 
 			return	(unsigned int)((float)m_PhysicalArmor * tempRate);
 		}
-		const unsigned int GetMagicalDamage( void )
+		const unsigned int GetMagicalDamage( void ) const
 		{
 			float	tempRate = 1.0f;
 
@@ -97,7 +97,7 @@ namespace	Matchless
 
 			return	(unsigned int)((float)m_MagicalDamage * tempRate);
 		}
-		const unsigned int GetMagicalArmor( void )
+		const unsigned int GetMagicalArmor( void ) const
 		{
 			float	tempRate = 1.0f;
 
@@ -114,7 +114,8 @@ namespace	Matchless
 			return	(unsigned int)((float)m_MagicalArmor * tempRate);
 		}
 
-		std::list< CState > & GetStateList( void )				{ return m_StateList; }
+		std::list< CState >& GetStateList( void )				{ return m_StateList; }
+		const std::list< CState >& GetStateList( void ) const	{ return m_StateList; }
 
 		// Set Member Function
 		void SetClass( const ECharacterClass aType )			{ m_Class = aType; }
@@ -201,10 +202,9 @@ namespace	Matchless
 			return	false;
 		}
 
-		bool FindState( const EStateType aType )
+		bool FindState( const EStateType aType ) const
 		{
-			std::list< CState >::iterator	sIter;
-			for( sIter = m_StateList.begin() ; sIter != m_StateList.end() ; ++sIter )
+			for( auto sIter = m_StateList.begin() ; sIter != m_StateList.end() ; ++sIter )
 			{
 				if( sIter->GetType() == aType )
 				{
@@ -232,6 +232,9 @@ namespace	Matchless
 		std::list< CState >		m_StateList;
 
 	};
+
+	void Encode( cOPacket& oPacket, const CCharacter& info );
+	void Decode( cIPacket& iPacket, CCharacter& info );
 
 
 	extern CCharacter	DefaultCharacter;

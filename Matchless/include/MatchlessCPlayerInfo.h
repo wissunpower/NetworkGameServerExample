@@ -20,8 +20,10 @@ namespace	Matchless
 		const EMainStepState & GetMainStepState( void ) const		{ return m_MainStepState; }
 		const bool IsRoomMaster( void ) const						{ return m_bRoomMaster; }
 		const unsigned short int GetTeamNum( void ) const			{ return m_TeamNum; }
-		SMatrix4 & GetTransform( void )								{ return m_Transform; }
-		CCharacter & GetCharacterInfo( void )						{ return m_CharacterInfo; }
+		SMatrix4& GetTransform( void )								{ return m_Transform; }
+		const SMatrix4& GetTransform( void ) const					{ return m_Transform; }
+		CCharacter& GetCharacterInfo( void )						{ return m_CharacterInfo; }
+		const CCharacter& GetCharacterInfo( void ) const			{ return m_CharacterInfo; }
 		const unsigned int GetCurrentCastStartTick( void ) const	{ return m_CurrentCastStartTick; }
 
 		// Set Member Function
@@ -57,8 +59,27 @@ namespace	Matchless
 		unsigned int		m_CurrentCastStartTick;
 
 	};
+
+	void Encode( cOPacket& oPacket, const CPlayerInfo& info );
+	void Decode( cIPacket& iPacket, CPlayerInfo& info );
 }
 
+
+
+struct cAniTrackInfo
+{
+	unsigned int	Priority;
+	float			Weight;
+	float			Speed;
+	double			Position;
+	int				Enable;
+
+	unsigned int	AniIndex;
+	std::string		AniName;
+};
+
+void Encode( cOPacket& oPacket, const cAniTrackInfo& info );
+void Decode( cIPacket& iPacket, cAniTrackInfo& info );
 
 
 #endif		// __MATCHLESSCPLAYERINFO_H_93hs9_vj29t_fj923__

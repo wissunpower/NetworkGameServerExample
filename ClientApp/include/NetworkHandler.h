@@ -7,6 +7,8 @@
 #include		"ClientAppRoot.h"
 
 
+void SetAniTrackInfo( SAniTrackInfo& dst, const cAniTrackInfo& src );
+void SetAniTrackInfo( cAniTrackInfo& dst, const SAniTrackInfo& src );
 
 DWORD WINAPI NetReceiveProcess( LPVOID arg );
 int ChangeAndInformMainStepState( Matchless::CClient & aDestModule, const Matchless::EMainStepState & aSrc );

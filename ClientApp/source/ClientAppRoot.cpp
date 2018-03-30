@@ -1,5 +1,7 @@
 
+#include	"stdafx.h"
 #include	"ClientAppRoot.h"
+#include	"cPacket.h"
 
 
 
@@ -283,11 +285,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_NormalAttack;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 2:
@@ -295,11 +297,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_Raid;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 3:
@@ -307,11 +309,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_Stun;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 4:
@@ -319,11 +321,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_ArmorBreak;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 5:
@@ -331,11 +333,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_PowerBreak;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 6:
@@ -347,11 +349,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Breaker_Silent;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 9:
@@ -370,11 +372,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Defender_NormalAttack;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 2:
@@ -382,11 +384,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Defender_StoneSkin;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 3:
@@ -394,11 +396,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Defender_Natural;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 4:
@@ -408,11 +410,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Defender_AttackBreak;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 6:
@@ -420,11 +422,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Defender_HeavyBlow;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 7:
@@ -447,11 +449,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Mage_NormalAttack;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 2:
@@ -463,11 +465,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Mage_IceBolt;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 5:
@@ -475,11 +477,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Mage_FireBall;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 6:
@@ -504,11 +506,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Healer_NormalAttack;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 2:
@@ -516,11 +518,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Healer_Perfect;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 3:
@@ -528,11 +530,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Healer_QuickHeal;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 4:
@@ -540,11 +542,11 @@ bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned
 			{
 				tempECS = Matchless::ECS_Healer_NormalHeal;
 
-				memcpy( buf, &tempECS, sizeof( tempECS ) );									bufIndex += sizeof( tempECS );
-				memcpy( buf + bufIndex, &aCurrentTarget, sizeof( aCurrentTarget ) );		bufIndex += sizeof( tempECS );
-
-				tempMessage.SendData(  g_ThisClient.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_GAME_SKILL_REQUEST,
-										bufIndex,  buf  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FCTS_GAME_SKILL_REQUEST );
+				oPacket.Encode4u( tempECS );
+				oPacket.Encode4u( aCurrentTarget );
+				oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 			}
 			break;
 		case 5:

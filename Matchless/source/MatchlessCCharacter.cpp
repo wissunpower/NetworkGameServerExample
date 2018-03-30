@@ -1,6 +1,7 @@
 
+#include	"stdafx.h"
 #include	"MatchlessCCharacter.h"
-
+#include	"cPacket.h"
 
 
 Matchless::CCharacter & Matchless::CCharacter::operator=( const CCharacter & src )
@@ -172,6 +173,49 @@ const unsigned int Matchless::CCharacter::DecreaseMagicalDamage( const unsigned 
 const unsigned int Matchless::CCharacter::DecreaseMagicalArmor( const unsigned int aValue )
 {
 	return	( m_MagicalArmor = ( aValue > m_MagicalArmor ) ? 0 : m_MagicalArmor - aValue );
+}
+
+
+void Matchless::Encode( cOPacket& oPacket, const CCharacter& info )
+{
+	oPacket.Encode4u( info.GetClass() );
+	oPacket.Encode4u( info.GetMaxHealth() );
+	oPacket.Encode4u( info.GetCurrentHealth() );
+	oPacket.Encode4u( info.GetMaxEnergy() );
+	oPacket.Encode4u( info.GetCurrentEnergy() );
+	oPacket.Encode4u( info.GetPhysicalDamage() );
+	oPacket.Encode4u( info.GetPhysicalArmor() );
+	oPacket.Encode4u( info.GetMagicalDamage() );
+	oPacket.Encode4u( info.GetMagicalArmor() );
+
+	oPacket.Encode4u( info.GetStateList().size() );
+	for ( auto state : info.GetStateList() )
+	{
+		Encode( oPacket, state );
+	}
+}
+
+void Matchless::Decode( cIPacket& iPacket, CCharacter& info )
+{
+	info.SetClass( static_cast<ECharacterClass>( iPacket.Decode4u() ) );
+	info.SetMaxHealth( iPacket.Decode4u() );
+	info.SetCurrentHealth( iPacket.Decode4u() );
+	info.SetMaxEnergy( iPacket.Decode4u() );
+	info.SetCurrentEnergy( iPacket.Decode4u() );
+	info.SetPhysicalDamage( iPacket.Decode4u() );
+	info.SetPhysicalArmor( iPacket.Decode4u() );
+	info.SetMagicalDamage( iPacket.Decode4u() );
+	info.SetMagicalArmor( iPacket.Decode4u() );
+
+	auto& stateList = info.GetStateList();
+	stateList.clear();
+	size_t nStateCount = iPacket.Decode4u();
+	for( auto i = 0 ; i < nStateCount ; ++i )
+	{
+		CState state;
+		Decode( iPacket, state );
+		stateList.push_back( state );;
+	}
 }
 
 

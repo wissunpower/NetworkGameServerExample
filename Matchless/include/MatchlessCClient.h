@@ -20,6 +20,9 @@ namespace	Matchless
 		CPlayerInfo		m_PlayerInfo;
 
 	};
+
+	void Encode( cOPacket& oPacket, const CClient& client );
+	void Decode( cIPacket& iPacket, CClient& client );
 }
 
 

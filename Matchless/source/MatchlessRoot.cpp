@@ -1,6 +1,49 @@
 
+#include	"stdafx.h"
 #include	"MatchlessRoot.h"
+#include	"cPacket.h"
 
+
+
+void Matchless::Encode( cOPacket& oPacket, const SMatrix4& m )
+{
+	oPacket.Encode4f( m._11 );
+	oPacket.Encode4f( m._12 );
+	oPacket.Encode4f( m._13 );
+	oPacket.Encode4f( m._14 );
+	oPacket.Encode4f( m._21 );
+	oPacket.Encode4f( m._22 );
+	oPacket.Encode4f( m._23 );
+	oPacket.Encode4f( m._24 );
+	oPacket.Encode4f( m._31 );
+	oPacket.Encode4f( m._32 );
+	oPacket.Encode4f( m._33 );
+	oPacket.Encode4f( m._34 );
+	oPacket.Encode4f( m._41 );
+	oPacket.Encode4f( m._42 );
+	oPacket.Encode4f( m._43 );
+	oPacket.Encode4f( m._44 );
+}
+
+void Matchless::Decode( cIPacket& iPacket, SMatrix4& m )
+{
+	m._11 = iPacket.Decode4f();
+	m._12 = iPacket.Decode4f();
+	m._13 = iPacket.Decode4f();
+	m._14 = iPacket.Decode4f();
+	m._21 = iPacket.Decode4f();
+	m._22 = iPacket.Decode4f();
+	m._23 = iPacket.Decode4f();
+	m._24 = iPacket.Decode4f();
+	m._31 = iPacket.Decode4f();
+	m._32 = iPacket.Decode4f();
+	m._33 = iPacket.Decode4f();
+	m._34 = iPacket.Decode4f();
+	m._41 = iPacket.Decode4f();
+	m._42 = iPacket.Decode4f();
+	m._43 = iPacket.Decode4f();
+	m._44 = iPacket.Decode4f();
+}
 
 
 float GetDistanceIn3D(  const float aStartPosX,  const float aStartPosY,  const float aStartPosZ,

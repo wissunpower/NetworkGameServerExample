@@ -4,6 +4,10 @@
 
 
 
+class cOPacket;
+class cIPacket;
+
+
 namespace	Matchless
 {
 	enum	EStateType
@@ -55,6 +59,9 @@ namespace	Matchless
 		unsigned int	m_ExtraValue;
 
 	};
+
+	void Encode( cOPacket& oPacket, const CState& info );
+	void Decode( cIPacket& iPacket, CState& info );
 }
 
 

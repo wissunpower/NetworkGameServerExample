@@ -12,6 +12,11 @@
 
 
 
+class cIPacket;
+class cOPacket;
+
+
+
 namespace	Matchless
 {
 	enum	EMainStepState
@@ -111,6 +116,9 @@ namespace	Matchless
 			float m[4][4];
 		};
 	};
+
+	void Encode( cOPacket& oPacket, const SMatrix4& m );
+	void Decode( cIPacket& iPacket, SMatrix4& m );
 }
 
 

@@ -26,6 +26,7 @@
     <ClCompile Include="source\cMonitor.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="source\cPacket.cpp" />
     <ClCompile Include="source\cRingBuffer.cpp" />
     <ClCompile Include="source\cSingleton.cpp" />
     <ClCompile Include="source\cThread.cpp" />
@@ -41,11 +42,13 @@
   <ItemGroup>
     <ClInclude Include="..\Include\wspstr.h" />
     <ClInclude Include="include\cConnection.h" />
+    <ClInclude Include="include\cException.h" />
     <ClInclude Include="include\cIOCP.h" />
     <ClInclude Include="include\cIocpServer.h" />
     <ClInclude Include="include\cIocpServer_Impl.h" />
     <ClInclude Include="include\cLog.h" />
     <ClInclude Include="include\cMonitor.h" />
+    <ClInclude Include="include\cPacket.h" />
     <ClInclude Include="include\cQueue.h" />
     <ClInclude Include="include\cRingBuffer.h" />
     <ClInclude Include="include\cSingleton.h" />

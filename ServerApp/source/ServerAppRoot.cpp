@@ -1,6 +1,7 @@
 
 #include	"stdafx.h"
 #include	"ServerAppRoot.h"
+#include	"cPacket.h"
 
 
 
@@ -118,13 +119,15 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 
 					cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().erase( currentCSIter );
 
-					memcpy( buf, &tempID, sizeof( tempID ) );							bufIndex = sizeof( tempID );
-					memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-					memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+					cOPacket oPacket;
+					oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+					oPacket.Encode4u( tempID );
+					oPacket.Encode4u( tempCDT );
+					oPacket.Encode4u( tempAmount );
 
 					for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 					{
-						SendDataFSV( cIter1->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+						oPacket.Send( cIter1->second.m_NetSystem.GetSocket() );
 					}
 				}
 			}
@@ -141,13 +144,15 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 				tempCDT = Matchless::ECDT_CurrentEnergy;
 				tempAmount = cIter->second.m_PlayerInfo.GetCharacterInfo().IncreaseCurrentEnergy( 1 );
 
-				memcpy( buf, &tempID, sizeof( tempID ) );							bufIndex = sizeof( tempID );
-				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket.Encode4u( tempID );
+				oPacket.Encode4u( tempCDT );
+				oPacket.Encode4u( tempAmount );
 
 				for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 				{
-					SendDataFSV( cIter1->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					oPacket.Send( cIter1->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -294,7 +299,11 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 	if( g_ClientList.end() != cIt )
 	{
 		/* temporary code for dev. */g_IsGameStartable = true;
-		SendDataFSV( cIt->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_STARTABLE, sizeof( g_IsGameStartable ), (char*)&g_IsGameStartable );
+
+		cOPacket oPacket;
+		oPacket.Encode4u( Matchless::FSTC_STARTABLE );
+		oPacket.EncodeBool( g_IsGameStartable );
+		oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
 	}
 
 	return 0;
@@ -378,32 +387,38 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			unsigned int	tempHealth = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
-			memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-			memcpy( buf + bufIndex, &tempHealth, sizeof( tempHealth ) );		bufIndex += sizeof( tempHealth );
+			oPacket = cOPacket{};
+			oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( tempCDT );
+			oPacket.Encode4u( tempHealth );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					if ( tempIsGameFinish )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						cOPacket oPacket;
+						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -414,7 +429,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -426,41 +443,49 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			const bool		tempIsGameFinish = IsGameFinish();
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
 			tempAmount = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
-			memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-			memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+			oPacket = cOPacket{};
+			oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( tempCDT );
+			oPacket.Encode4u( tempAmount );
 
 			tempCDT = Matchless::ECDT_CurrentEnergy;
 			tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						cOPacket oPacket;
+						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -471,7 +496,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -483,9 +510,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			const bool		tempIsGameFinish = IsGameFinish();
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -493,11 +522,13 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 
 				// cancel target's casting
-				SendDataFSV( aTarget.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_CANCEL, 0, NULL );
+				cOPacket oPacket1;
+				oPacket1.Encode4u( Matchless::FSTC_GAME_SKILL_CANCEL );
+				oPacket1.Send( aTarget.m_NetSystem.GetSocket() );
 				auto smIter = g_SkillMessageList.begin();
 				while ( smIter != g_SkillMessageList.end() )
 				{
@@ -514,26 +545,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
 			tempAmount = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
-			memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-			memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+			oPacket = cOPacket{};
+			oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( tempCDT );
+			oPacket.Encode4u( tempAmount );
 
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_Faint;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						cOPacket oPacket;
+						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -544,7 +581,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -554,9 +593,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::BreakerArmorBreak.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -564,28 +605,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_PhyArmDec;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -595,9 +640,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::BreakerPowerBreak.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -605,28 +652,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_PhyDamDec;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -636,9 +687,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::BreakerSilent.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -646,28 +699,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_Silence;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -677,9 +734,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::DefenderStoneSkin.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -687,28 +746,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_PhyArmInc;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -718,9 +781,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::DefenderNatural.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -728,28 +793,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_MagArmInc;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -759,9 +828,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::DefenderAttackBreak.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -770,35 +841,41 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_PhyDamDec;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_MagDamDec;
-			memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-			memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+			oPacket = cOPacket{};
+			oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( tempCDT );
+			oPacket.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -810,41 +887,49 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			const bool		tempIsGameFinish = IsGameFinish();
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_CurrentHealth;
 			tempAmount = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
-			memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-			memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-			memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+			oPacket = cOPacket{};
+			oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( tempCDT );
+			oPacket.Encode4u( tempAmount );
 
 			tempCDT = Matchless::ECDT_CurrentEnergy;
 			tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+						cOPacket oPacket;
+						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -855,7 +940,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -871,8 +958,10 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempSMInfo.m_Target = aTarget.m_NetSystem.GetID();
 				tempSMInfo.m_SkillKind = (unsigned int)aSkillKind;
 
-				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
-										sizeof( tempCastTime ),  (char*)&tempCastTime  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_CASTSTART );
+				oPacket.Encode4u( tempCastTime );
+				oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
@@ -887,40 +976,48 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				const bool		tempIsGameFinish = IsGameFinish();
 
 				// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-				memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+				oPacket.Encode4u( casterID );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( aSkillKind );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
-				memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+				oPacket = cOPacket{};
+				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( tempCDT );
+				oPacket.Encode4u( tempAmount );
 
 				tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 				tempCDT = Matchless::ECDT_CurrentEnergy;
-				memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+				cOPacket oPacket1;
+				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( tempCDT );
+				oPacket1.Encode4u( tempAmount );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 
 						if ( tempIsGameFinish )
 						{
-							SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+							cOPacket oPacket;
+							oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+							oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 						}
 					}
 					if ( tempIsGameFinish )
@@ -932,7 +1029,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -948,8 +1047,10 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempSMInfo.m_Target = aTarget.m_NetSystem.GetID();
 				tempSMInfo.m_SkillKind = (unsigned int)aSkillKind;
 
-				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
-										sizeof( tempCastTime ),  (char*)&tempCastTime  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_CASTSTART );
+				oPacket.Encode4u( tempCastTime );
+				oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
@@ -962,40 +1063,48 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				const bool		tempIsGameFinish = IsGameFinish();
 
 				// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-				memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+				oPacket.Encode4u( casterID );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( aSkillKind );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
-				memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+				oPacket = cOPacket{};
+				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( tempCDT );
+				oPacket.Encode4u( tempAmount );
 
 				tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 				tempCDT = Matchless::ECDT_CurrentEnergy;
-				memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+				cOPacket oPacket1;
+				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( tempCDT );
+				oPacket1.Encode4u( tempAmount );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 
 						if ( tempIsGameFinish )
 						{
-							SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAMEOUT, 0, NULL );
+							cOPacket oPacket;
+							oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
+							oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 						}
 					}
 					if ( tempIsGameFinish )
@@ -1007,7 +1116,9 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -1017,9 +1128,11 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			aCaster.m_PlayerInfo.GetCharacterInfo().DecreaseCurrentEnergy( Matchless::HealerPerfect.GetEnergyCost() );
 
 			// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-			memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-			memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-			memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+			oPacket.Encode4u( casterID );
+			oPacket.Encode4u( targetID );
+			oPacket.Encode4u( aSkillKind );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
@@ -1027,28 +1140,32 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 
 			// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 			tempCDT = Matchless::ECDT_InsertState;
 			tempAmount = (unsigned int)Matchless::EST_Perfect;
-			memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-			memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-			memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+			cOPacket oPacket1;
+			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( tempCDT );
+			oPacket1.Encode4u( tempAmount );
 
 			{
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -1064,8 +1181,10 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempSMInfo.m_Target = aTarget.m_NetSystem.GetID();
 				tempSMInfo.m_SkillKind = (unsigned int)aSkillKind;
 
-				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
-										sizeof( tempCastTime ),  (char*)&tempCastTime  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_CASTSTART );
+				oPacket.Encode4u( tempCastTime );
+				oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
@@ -1077,43 +1196,51 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				unsigned int	tempAmount = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
 
 				// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-				memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+				oPacket.Encode4u( casterID );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( aSkillKind );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
-				memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+				oPacket = cOPacket{};
+				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( tempCDT );
+				oPacket.Encode4u( tempAmount );
 
 				tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 				tempCDT = Matchless::ECDT_CurrentEnergy;
-				memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+				cOPacket oPacket1;
+				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( tempCDT );
+				oPacket1.Encode4u( tempAmount );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -1129,8 +1256,10 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempSMInfo.m_Target = aTarget.m_NetSystem.GetID();
 				tempSMInfo.m_SkillKind = (unsigned int)aSkillKind;
 
-				SendDataFSV(  aCaster.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FSTC_GAME_SKILL_CASTSTART,
-										sizeof( tempCastTime ),  (char*)&tempCastTime  );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_CASTSTART );
+				oPacket.Encode4u( tempCastTime );
+				oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				g_SkillMessageList.insert( std::map< unsigned int, MatchlessServer::SkillMessageInfo >::value_type( g_Timer.GetTick() + tempCastTime, tempSMInfo ) );
@@ -1142,43 +1271,51 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				unsigned int	tempAmount = aTarget.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth();
 
 				// send Matchless::FSTC_GAME_SKILL_APPLY message to client
-				memcpy( buf, &casterID, sizeof( casterID ) );						bufIndex = sizeof( casterID );
-				memcpy( buf + bufIndex, &targetID, sizeof( targetID ) );			bufIndex += sizeof( targetID );
-				memcpy( buf + bufIndex, &aSkillKind, sizeof( aSkillKind ) );		bufIndex += sizeof( aSkillKind );
+				cOPacket oPacket;
+				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_APPLY );
+				oPacket.Encode4u( casterID );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( aSkillKind );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_APPLY, bufIndex, buf );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 
 				// send Matchless::FSTC_GAME_CHAR_UPDATE message to client
 				tempCDT = Matchless::ECDT_CurrentHealth;
-				memcpy( buf, &targetID, sizeof( targetID ) );						bufIndex = sizeof( targetID );
-				memcpy( buf + bufIndex, &tempCDT, sizeof( tempCDT ) );				bufIndex += sizeof( tempCDT );
-				memcpy( buf + bufIndex, &tempAmount, sizeof( tempAmount ) );		bufIndex += sizeof( tempAmount );
+				oPacket = cOPacket{};
+				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket.Encode4u( targetID );
+				oPacket.Encode4u( tempCDT );
+				oPacket.Encode4u( tempAmount );
 
 				tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 				tempCDT = Matchless::ECDT_CurrentEnergy;
-				memcpy( buf1, &targetID, sizeof( targetID ) );						buf1Index = sizeof( targetID );
-				memcpy( buf1 + buf1Index, &tempCDT, sizeof( tempCDT ) );			buf1Index += sizeof( tempCDT );
-				memcpy( buf1 + buf1Index, &tempAmount, sizeof( tempAmount ) );		buf1Index += sizeof( tempAmount );
+				cOPacket oPacket1;
+				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
+				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( tempCDT );
+				oPacket1.Encode4u( tempAmount );
 
 				{
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, bufIndex, buf );
-						SendDataFSV( cIter->second.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_CHAR_UPDATE, buf1Index, buf1 );
+						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
 					}
 				}
 			}
 		}
 		else
 		{
-			SendDataFSV( aCaster.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FSTC_GAME_SKILL_FAILED, 0, NULL );
+			cOPacket oPacket;
+			oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
+			oPacket.Send( aCaster.m_NetSystem.GetSocket() );
 		}
 		break;
 
@@ -1212,20 +1349,6 @@ bool IsNowCasting( const unsigned int aID, const bool aIsCancel )
 
 
 	return	returnValue;
-}
-
-
-int SendDataFSV( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData )
-{
-	int				rv;
-	CNetMessage		tempMessage;
-
-
-	rv = tempMessage.SendData( socket, aFlags, aType, ( aAddDataLen < BUFSIZE ) ? aAddDataLen : BUFSIZE, apAddData );
-
-	//PrintPacket( tempMessage );
-
-	return	( rv );
 }
 
 

@@ -7,6 +7,9 @@
 #include		"RD_NetworkRoot.h"
 
 
+class cOPacket;
+class cIPacket;
+
 
 class CNetClient
 {
@@ -28,6 +31,9 @@ private:
 	SOCKET				m_Socket;
 
 };
+
+void Encode( cOPacket& oPacket, const CNetClient& client );
+void Decode( cIPacket& iPacket, CNetClient& client );
 
 
 

@@ -69,14 +69,11 @@ bool IsGameFinish( void );
 bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, Matchless::CClient & aCaster, Matchless::CClient & aTarget );
 bool IsNowCasting( const unsigned int aID, const bool aIsCancel );
 
-int SendDataFSV( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData );
-
 bool PrintPacket( const CNetMessage & msg );
 
 
-DWORD WINAPI ProcessClient( LPVOID arg );
 DWORD WINAPI ProcessClient_Accept( LPVOID arg );
-DWORD WINAPI ProcessClient_Recv( const SOCKET socket, const CNetMessage& message );
+DWORD WINAPI ProcessClient_Recv( const SOCKET socket, cIPacket& iPacket );
 
 
 int InitLog();

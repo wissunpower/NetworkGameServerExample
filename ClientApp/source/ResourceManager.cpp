@@ -1,6 +1,7 @@
 
+#include	"stdafx.h"
 #include	"ResourceManager.h"
-
+#include	"cPacket.h"
 
 
 int GetCharacterResourceName( const Matchless::ECharacterClass & aECC, LPTSTR apNameOut, unsigned int aNameLen )
@@ -313,7 +314,9 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 
 	g_IsGraphicResourceLoaded = true;
 
-	tempMessage.SendData( g_ThisClient.m_NetSystem.GetSocket(), 0, (unsigned int)Matchless::FCTS_GAME_MOVE_ALL_REQUEST, 0, NULL );
+	cOPacket oPacket;
+	oPacket.Encode4u( Matchless::FCTS_GAME_MOVE_ALL_REQUEST );
+	oPacket.Send( g_ThisClient.m_NetSystem.GetSocket() );
 
 	return 0;
 }

@@ -1,18 +1,43 @@
 
+#include	"stdafx.h"
 #include	"NetworkHandler.h"
+#include	"cException.h"
+#include	"cPacket.h"
 
+
+void SetAniTrackInfo( SAniTrackInfo& dst, const cAniTrackInfo& src )
+{
+	dst.m_TrackDesc.Priority = static_cast<D3DXPRIORITY_TYPE>( src.Priority );
+	dst.m_TrackDesc.Weight = src.Weight;
+	dst.m_TrackDesc.Speed = src.Speed;
+	dst.m_TrackDesc.Position = src.Position;
+	dst.m_TrackDesc.Enable = src.Enable;
+	dst.m_AniIndex = src.AniIndex;
+	//dst.m_AniName = src.AniName.c_str();
+}
+
+void SetAniTrackInfo( cAniTrackInfo& dst, const SAniTrackInfo& src )
+{
+	dst.Priority = src.m_TrackDesc.Priority;
+	dst.Weight = src.m_TrackDesc.Weight;
+	dst.Speed = src.m_TrackDesc.Speed;
+	dst.Position = src.m_TrackDesc.Position;
+	dst.Enable = src.m_TrackDesc.Enable;
+	dst.AniIndex = src.m_AniIndex;
+	//dst.AniName = src.m_AniName;
+}
 
 
 DWORD WINAPI NetReceiveProcess( LPVOID arg )
-{
+try {
 	unsigned int				bufIndex;
 	const SOCKET				thisSocket = (SOCKET)arg;
-	CNetMessage					tempMessage;
+	cIPacket					iPacket;
 	Matchless::CClient			tempClient;
 	unsigned int				tempID;
 	unsigned int				tempCasterID;
 	unsigned int				tempTargetID;
-	unsigned short int			tempTeamNo;
+	unsigned int				tempTeamNo;
 	bool						tempbRM;
 	Matchless::SMatrix4			tempMtx;
 	D3DXMATRIX					tempD3DXMtx;
@@ -27,19 +52,21 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 
 	while( true )
 	{
-		if( SOCKET_ERROR == tempMessage.ReceiveData( thisSocket, 0 ) )
+		if( SOCKET_ERROR == iPacket.Recv( thisSocket ) )
 		{
 			continue;
 		}
 
-		switch( (Matchless::ENetMessageType)tempMessage.GetType() )
+		const Matchless::ENetMessageType nMsgType = static_cast<Matchless::ENetMessageType>( iPacket.Decode4u() );
+
+		switch( nMsgType )
 		{
 
 		case Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER:
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
-			memcpy( &tempTeamNo, tempMessage.GetpAddData() + bufIndex, sizeof( tempTeamNo ) );		bufIndex += sizeof( tempTeamNo );
-			memcpy( &tempbRM, tempMessage.GetpAddData() + bufIndex, sizeof( tempbRM ) );			bufIndex += sizeof( tempbRM );
-			memcpy( &tempCC, tempMessage.GetpAddData() + bufIndex, sizeof( tempCC ) );				bufIndex += sizeof( tempCC );
+			tempID = iPacket.Decode4u();
+			tempTeamNo = iPacket.Decode4u();
+			tempbRM = iPacket.DecodeBool();
+			tempCC = static_cast<Matchless::ECharacterClass>( iPacket.Decode4u() );
 			tempClient = Matchless::CClient();
 			tempClient.m_NetSystem.SetID( tempID );
 			tempClient.m_PlayerInfo.SetTeamNum( tempTeamNo );
@@ -57,7 +84,7 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_INFORM_ANOTHERCLIENT_LEAVE:
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );
+			tempID = iPacket.Decode4u();
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				if ( 0 != tempID && g_ThisClient.m_NetSystem.GetID() != tempID )
@@ -72,8 +99,8 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_CHARCLASS_UPDATE:
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );					bufIndex = sizeof( tempID );
-			memcpy( &tempCC, tempMessage.GetpAddData() + bufIndex, sizeof( tempCC ) );		bufIndex += sizeof( tempCC );
+			tempID = iPacket.Decode4u();
+			tempCC = static_cast<Matchless::ECharacterClass>( iPacket.Decode4u() );
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
@@ -88,8 +115,8 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_TEAM_UPDATE:
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
-			memcpy( &tempTeamNo, tempMessage.GetpAddData() + bufIndex, sizeof( tempTeamNo ) );		bufIndex += sizeof( tempTeamNo );
+			tempID = iPacket.Decode4u();
+			tempTeamNo = iPacket.Decode4u();
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
@@ -106,7 +133,7 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 		case Matchless::FSTC_MAP_UPDATE:
 			{
 				cMonitor::Owner lock{ g_Monitor };
-				memcpy( &g_CurrentMapKind, tempMessage.GetpAddData(), sizeof( g_CurrentMapKind ) );
+				g_CurrentMapKind = iPacket.Decode4u();
 			}
 			break;
 
@@ -126,8 +153,8 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			{
 				break;
 			}
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
-			memcpy( &tempMtx, tempMessage.GetpAddData() + sizeof( tempID ), sizeof( tempMtx ) );	bufIndex += sizeof( tempMtx );
+			tempID = iPacket.Decode4u();
+			Matchless::Decode( iPacket, tempMtx );
 			for( int i = 0 ; i < 4 ; ++i )
 			{
 				for( int j = 0 ; j < 4 ; ++j )
@@ -148,21 +175,25 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			{
 				break;
 			}
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );							bufIndex = sizeof( tempID );
-			while( bufIndex < tempMessage.GetAddDataLen() )
+			tempID = iPacket.Decode4u();
 			{
+				cAniTrackInfo aniInfo;
+				auto nAniCount = iPacket.Decode4u();
+
 				cMonitor::Owner lock{ g_Monitor };
-				memcpy( &tempAniTrackIndex, tempMessage.GetpAddData() + bufIndex, sizeof( tempAniTrackIndex ) );
-				bufIndex += sizeof( tempAniTrackIndex );
-				memcpy( &tempAniTrackInfo, tempMessage.GetpAddData() + bufIndex, sizeof( tempAniTrackInfo ) );
-				bufIndex += sizeof( tempAniTrackInfo );
-				g_AnotherCharacterList[ tempID ].SetCurrentAnimationSet( tempAniTrackIndex, tempAniTrackInfo.m_AniIndex );
-				g_AnotherCharacterList[ tempID ].SetAniTrackInfoDesc( tempAniTrackIndex, tempAniTrackInfo.m_TrackDesc );
+				for ( auto i = 0 ; i < nAniCount ; ++i )
+				{
+					tempAniTrackIndex = iPacket.Decode4u();
+					Decode( iPacket, aniInfo );
+					SetAniTrackInfo( tempAniTrackInfo, aniInfo );
+					g_AnotherCharacterList[ tempID ].SetCurrentAnimationSet( tempAniTrackIndex, tempAniTrackInfo.m_AniIndex );
+					g_AnotherCharacterList[ tempID ].SetAniTrackInfoDesc( tempAniTrackIndex, tempAniTrackInfo.m_TrackDesc );
+				}
 			}
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_CASTSTART:
-			memcpy( &tempCastTime, tempMessage.GetpAddData(), sizeof( tempCastTime ) );
+			tempCastTime = iPacket.Decode4u();
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				g_IsNowCasting = true;
@@ -172,9 +203,9 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_GAME_SKILL_APPLY:
-			memcpy( &tempCasterID, tempMessage.GetpAddData(), sizeof( tempCasterID ) );							bufIndex = sizeof( tempCasterID );
-			memcpy( &tempTargetID, tempMessage.GetpAddData() + bufIndex, sizeof( tempTargetID ) );				bufIndex += sizeof( tempTargetID );
-			memcpy( &tempCharacterSkill, tempMessage.GetpAddData() + bufIndex, sizeof( tempCharacterSkill ) );	bufIndex += sizeof( tempCharacterSkill );
+			tempCasterID = iPacket.Decode4u();
+			tempTargetID = iPacket.Decode4u();
+			tempCharacterSkill = static_cast<Matchless::ECharacterSkill>( iPacket.Decode4u() );
 			HandleSkillWork( tempCharacterSkill, tempCasterID, tempTargetID );
 			break;
 
@@ -191,9 +222,9 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_GAME_CHAR_UPDATE:
-			memcpy( &tempID, tempMessage.GetpAddData(), sizeof( tempID ) );
-			memcpy( &tempCDT, tempMessage.GetpAddData() + sizeof( tempID ), sizeof( tempCDT ) );
-			memcpy( &tempNumeric, tempMessage.GetpAddData() + sizeof( tempID ) + sizeof( tempCDT ), sizeof( tempNumeric ) );
+			tempID = iPacket.Decode4u();
+			tempCDT = static_cast<Matchless::ECharDataType>( iPacket.Decode4u() );
+			tempNumeric = iPacket.Decode4u();
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				if ( g_ThisClient.m_NetSystem.GetID() == tempID )
@@ -228,7 +259,7 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 			break;
 
 		case Matchless::FSTC_INFORM_CLIENTINFO:
-			memcpy( &tempClient, tempMessage.GetpAddData(), sizeof( tempClient ) );
+			Matchless::Decode( iPacket, tempClient );
 			{
 				cMonitor::Owner lock{ g_Monitor };
 				if ( g_ThisClient.m_NetSystem.GetID() != tempClient.m_NetSystem.GetID() )
@@ -246,7 +277,7 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 		case Matchless::FSTC_STARTABLE:
 			{
 				cMonitor::Owner lock{ g_Monitor };
-				memcpy( &g_IsGameStartable, tempMessage.GetpAddData(), tempMessage.GetAddDataLen() );
+				g_IsGameStartable = iPacket.DecodeBool();
 				UpdateRoomMasterUI( Matchless::EMSS_Play, g_IsGameStartable && g_ThisClient.m_PlayerInfo.IsRoomMaster() );
 			}
 			break;
@@ -257,15 +288,48 @@ DWORD WINAPI NetReceiveProcess( LPVOID arg )
 
 	return 0;
 }
+catch ( const cException& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+
+	return 0xa0000003;
+}
+catch ( const std::runtime_error& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+
+	return 0xa0000002;
+}
+catch ( const std::exception& e ) {
+#if defined( UNICODE ) | defined( _UNICODE )
+	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
+#else
+	_tcsncpy( g_Notice, e.what(), 512 );
+#endif
+
+	return 0xa0000001;
+}
+catch ( ... ) {
+	_tcsncpy( g_Notice, _T( "Unknown Exception" ), 512 );
+
+	return 0xa0000000;
+}
 
 
 int ChangeAndInformMainStepState( Matchless::CClient & aDestModule, const Matchless::EMainStepState & aSrc )
 {
-	CNetMessage		tempMessage;
-
 	aDestModule.m_PlayerInfo.SetMainStepState( aSrc );
-	tempMessage.SendData(  aDestModule.m_NetSystem.GetSocket(),  0,  (unsigned int)Matchless::FCTS_MSS_UPDATE,
-							sizeof( aDestModule.m_PlayerInfo.GetMainStepState() ),  (char*)&(aDestModule.m_PlayerInfo.GetMainStepState()) );
+
+	cOPacket oPacket;
+	oPacket.Encode4u( Matchless::FCTS_MSS_UPDATE );
+	oPacket.Encode4u( aDestModule.m_PlayerInfo.GetMainStepState() );
+	oPacket.Send( aDestModule.m_NetSystem.GetSocket() );
 
 	return 0;
 }
