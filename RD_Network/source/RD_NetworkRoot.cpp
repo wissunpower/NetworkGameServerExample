@@ -1,4 +1,5 @@
 
+#include	"stdafx.h"
 #include	"RD_NetworkRoot.h"
 
 

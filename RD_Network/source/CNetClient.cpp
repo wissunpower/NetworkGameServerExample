@@ -1,6 +1,7 @@
 
-#include		"CNetClient.h"
-#include		"cPacket.h"
+#include	"stdafx.h"
+#include	"CNetClient.h"
+#include	"cPacket.h"
 
 
 void Encode( cOPacket& oPacket, const CNetClient& client )

@@ -10,8 +10,6 @@
 
 DWORD WINAPI ProcessClient_Accept( LPVOID arg )
 {
-	char					buf[ BUFSIZE + 1 ];
-	unsigned int			bufIndex;
 	SOCKADDR_IN				clientaddr;
 	int						addrlen;
 	Matchless::CClient		currentClient;
@@ -330,7 +328,7 @@ try {
 
 			auto nAniCount = iPacket.Decode4u();
 			oPacket.Encode4u( nAniCount );
-			for ( auto i = 0 ; i < nAniCount ; ++i )
+			for ( unsigned int i = 0 ; i < nAniCount ; ++i )
 			{
 				oPacket.Encode4u( iPacket.Decode4u() );
 				Decode( iPacket, aniInfo );

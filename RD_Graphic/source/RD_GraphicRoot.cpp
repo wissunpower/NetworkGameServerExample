@@ -56,7 +56,6 @@ float GetDistanceWithMesh( bool * apHit, const D3DXVECTOR3 & aPosition, const D3
 	D3DXMATRIX		tempTM;
 	D3DXVECTOR3		countDirection( -aDirection.x, -aDirection.y, -aDirection.z );
 	BOOL			bFind;
-	BOOL			bCountFind;
 	float			fDistance = 0.0f;
 	float			fCountDistance = 0.0f;
 

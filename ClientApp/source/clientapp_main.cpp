@@ -405,7 +405,6 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 
 		if( g_IsUpdateMovePosition )
 		{
-			char					buf[ 512 ];
 			unsigned int			bufIndex = 0;
 			CNetMessage				tempMessage;
 			Matchless::SMatrix4		tempMatrix;
@@ -706,7 +705,6 @@ void CALLBACK KeyboardProc( UINT nChar, bool bKeyDown, bool bAltDown, void * pUs
 void CALLBACK OnGUIEvent( UINT nEvent, int nControlID, CDXUTControl * pControl, void * pUserContext )
 try {
 	SOCKADDR_IN		serveraddr;
-	METHOD			NewSkinningMethod;
 	CNetMessage		tempMessage;
 	cIPacket					iPacket;
 	Matchless::ENetMessageType	nMsgType;
@@ -806,7 +804,6 @@ try {
 		}
 		else																								// Succeed connect to server
 		{
-			unsigned int				bufIndex;
 			unsigned int				tempID;
 			unsigned short int			tempTeamNo;
 			bool						tempbRM;

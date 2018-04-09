@@ -30,7 +30,6 @@ void SetAniTrackInfo( cAniTrackInfo& dst, const SAniTrackInfo& src )
 
 DWORD WINAPI NetReceiveProcess( LPVOID arg )
 try {
-	unsigned int				bufIndex;
 	const SOCKET				thisSocket = (SOCKET)arg;
 	cIPacket					iPacket;
 	Matchless::CClient			tempClient;
@@ -181,7 +180,7 @@ try {
 				auto nAniCount = iPacket.Decode4u();
 
 				cMonitor::Owner lock{ g_Monitor };
-				for ( auto i = 0 ; i < nAniCount ; ++i )
+				for ( unsigned int i = 0 ; i < nAniCount ; ++i )
 				{
 					tempAniTrackIndex = iPacket.Decode4u();
 					Decode( iPacket, aniInfo );

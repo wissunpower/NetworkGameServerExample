@@ -82,7 +82,7 @@ bool CCamera::UpdateLight( D3DLIGHTTYPE aType, float aRange )
 	D3DXVec3Normalize( (D3DXVECTOR3*)&m_Light.Direction, &tempDirection );
 
 	m_Light.Position.x = m_Position.x;
-	m_Light.Position.y = m_Position.y + (tan( m_FOV / 2 ) * m_NearClip);
+	m_Light.Position.y = static_cast<float>( m_Position.y + ( tan( m_FOV / 2 ) * m_NearClip ) );
 	m_Light.Position.z = m_Position.z;
 
 	m_Light.Range = aRange;

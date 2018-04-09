@@ -74,8 +74,6 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 	bool			isWakeUp = false;
 
 	CNetMessage					tempMessage;
-	char						buf[ BUFSIZE + 1 ];
-	unsigned int				bufIndex;
 	unsigned int				tempID;
 	unsigned int				tempAmount;
 	Matchless::ECharDataType	tempCDT = Matchless::ECDT_CurrentEnergy;
@@ -354,8 +352,6 @@ bool IsGameFinish( void )
 
 bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, Matchless::CClient & aCaster, Matchless::CClient & aTarget )
 {
-	char						buf[ BUFSIZE + 1 ];
-	char						buf1[ BUFSIZE + 1 ];
 	unsigned int				bufIndex = 0;
 	unsigned int				buf1Index = 0;
 	CNetMessage					tempMessage;

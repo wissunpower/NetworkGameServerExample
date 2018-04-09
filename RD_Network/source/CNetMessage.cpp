@@ -1,4 +1,5 @@
 
+#include	"stdafx.h"
 #include	"CNetMessage.h"
 #include	<vector>
 #include	"LibraryDef.h"
@@ -142,10 +143,6 @@ void CNetMessage::SetData( const char* buf, const size_t len )
 
 int CNetMessage::SendData( SOCKET socket, int aFlags, unsigned int aType, unsigned int aAddDataLen, const char * const apAddData )
 {
-	int	errorCode;
-	int forwardReturnValue;
-	int backwardReturnValue;
-
 	// Set data member
 	m_type = aType;
 	m_addDataLen = aAddDataLen;

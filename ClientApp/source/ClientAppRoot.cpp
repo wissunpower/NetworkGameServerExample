@@ -250,7 +250,6 @@ bool UpdateRoomMasterUI( const Matchless::EMainStepState aState, const bool aOnO
 
 bool HandleSkillCommand( const Matchless::ECharacterClass aClass, const unsigned int aSkillKind, const unsigned int aCurrentTarget )
 {
-	char						buf[ 512 ];
 	unsigned int				bufIndex = 0;
 	CNetMessage					tempMessage;
 	Matchless::ECharacterSkill	tempECS = Matchless::ECS_Idle;
