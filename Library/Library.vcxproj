@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Include\wspstr.h" />
+    <ClInclude Include="..\Include\wspstr_impl.h" />
     <ClInclude Include="include\cConnection.h" />
     <ClInclude Include="include\cException.h" />
     <ClInclude Include="include\cIOCP.h" />
