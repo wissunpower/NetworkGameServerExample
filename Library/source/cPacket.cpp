@@ -67,14 +67,14 @@ void cOPacket::Encode8d( const double d )
 
 void cOPacket::EncodeStr( const std::string& s )
 {
-	Encode4u( s.length() );
-	Encode( sizeof( std::string::value_type ) * s.length(), s.c_str() );
+	Encode4u( static_cast<unsigned int>( s.length() ) );
+	Encode( static_cast<unsigned int>( sizeof( std::string::value_type ) * s.length() ), s.c_str() );
 }
 
 void cOPacket::EncodeStr( const std::wstring& s )
 {
-	Encode4u( s.length() );
-	Encode( sizeof( std::wstring::value_type ) * s.length(), s.c_str() );
+	Encode4u( static_cast<unsigned int>( s.length() ) );
+	Encode( static_cast<unsigned int>( sizeof( std::wstring::value_type ) * s.length() ), s.c_str() );
 }
 
 int cOPacket::Send( const SOCKET socket, const int flags /*= 0*/ )
@@ -192,7 +192,7 @@ int cIPacket::Recv( const SOCKET socket, const int flags /*= 0*/ )
 	memcpy_s( m_vBuffer.data() + m_nIndex, PACKET_SIZE_LENGTH, &nPacketSize, PACKET_SIZE_LENGTH );
 	m_nIndex += PACKET_SIZE_LENGTH;
 
-	ret = recvn( socket, m_vBuffer.data() + m_nIndex, m_vBuffer.size() - m_nIndex, flags );
+	ret = recvn( socket, m_vBuffer.data() + m_nIndex, static_cast<int>( m_vBuffer.size() - m_nIndex ), flags );
 	if ( SOCKET_ERROR == ret )
 	{
 		return SOCKET_ERROR;

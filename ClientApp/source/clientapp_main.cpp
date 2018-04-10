@@ -425,7 +425,7 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 
 			cOPacket oPacket;
 			oPacket.Encode4u( Matchless::FCTS_GAME_MOVE_ANIMATION );
-			oPacket.Encode4u( g_ThisCharacter.GetAniTrackMap().size() );
+			oPacket.Encode4u( static_cast<unsigned int>( g_ThisCharacter.GetAniTrackMap().size() ) );
 			for( auto atIter = g_ThisCharacter.GetAniTrackMap().begin()  ;  atIter != g_ThisCharacter.GetAniTrackMap().end()  ;  ++atIter )
 			{
 				oPacket.Encode4u( atIter->first );

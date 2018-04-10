@@ -185,7 +185,7 @@ int CNetMessage::SendData( SOCKET socket, int aFlags, unsigned int aType, unsign
 	memcpy_s( buf.data() + index, tempSize, m_pAddData, tempSize );
 	index += tempSize;
 
-	return send( socket, buf.data(), buf.size(), aFlags );
+	return send( socket, buf.data(), static_cast<int>( buf.size() ), aFlags );
 
 	//// Send application protocol header
 	//forwardReturnValue = send( socket, (char*)this, sizeof( *this ), aFlags );
@@ -245,7 +245,7 @@ int CNetMessage::ReceiveData( SOCKET socket, int aFlags )
 	}
 
 	std::vector< char > buf( bufSize - PACKET_SIZE_LENGTH );
-	backwardReturnValue = RD_Network::recvn( socket, buf.data(), buf.size(), aFlags );
+	backwardReturnValue = RD_Network::recvn( socket, buf.data(), static_cast<int>( buf.size() ), aFlags );
 	if ( backwardReturnValue == SOCKET_ERROR )
 	{
 		return SOCKET_ERROR;

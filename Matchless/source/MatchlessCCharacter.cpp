@@ -188,7 +188,7 @@ void Matchless::Encode( cOPacket& oPacket, const CCharacter& info )
 	oPacket.Encode4u( info.GetMagicalDamage() );
 	oPacket.Encode4u( info.GetMagicalArmor() );
 
-	oPacket.Encode4u( info.GetStateList().size() );
+	oPacket.Encode4u( static_cast<unsigned int>( info.GetStateList().size() ) );
 	for ( auto state : info.GetStateList() )
 	{
 		Encode( oPacket, state );
