@@ -33,6 +33,7 @@
     <ClCompile Include="source\cVBuffer.cpp" />
     <ClCompile Include="source\dllmain.cpp" />
     <ClCompile Include="source\Library.cpp" />
+    <ClCompile Include="source\LibraryDef.cpp" />
     <ClCompile Include="source\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

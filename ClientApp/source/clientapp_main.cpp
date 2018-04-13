@@ -758,7 +758,7 @@ try {
 			break;
 
 		case EVENT_EDITBOX_CHANGE:
-			WideCharToMultiByte( CP_ACP, 0, ((CDXUTEditBox*)pControl)->GetText(), -1, g_ConnectIP, IPV4_LENG, NULL, FALSE );
+			g_ConnectIP = ((CDXUTEditBox*)pControl)->GetText();
 			break;
 
 		}
@@ -769,7 +769,7 @@ try {
 		ZeroMemory( &serveraddr, sizeof( serveraddr ) );
 		serveraddr.sin_family = AF_INET;
 		serveraddr.sin_port = htons( MATCHLESS_SERVER_PORT );
-		serveraddr.sin_addr.s_addr = inet_addr( g_ConnectIP );
+		InetPton( serveraddr.sin_family, g_ConnectIP.c_str(), &serveraddr.sin_addr.s_addr );
 		if( (bCreateSocketFailed =
 				(INVALID_SOCKET == g_ThisClient.m_NetSystem.GetSocket()))  ||
 			(bConnectToServerFailed =
@@ -962,7 +962,7 @@ int InitApp( void )
 	g_ThisClient.m_PlayerInfo.SetbRoomMaster( false );
 
 	_tcscpy( g_Notice, TEXT( "Not found." ) );
-	strncpy( g_ConnectIP, SERVER_IPADDR, IPV4_LENG );
+	g_ConnectIP = SERVER_IPADDR;
 
 
 	// Initialize dialog object
@@ -1010,7 +1010,7 @@ int InitApp( void )
 	// Initialize control member object in g_MainStepStartUI dialog
 	CDXUTIMEEditBox::InitDefaultElements( &g_MainStepStartUI );
 	if(
-		SUCCEEDED( CDXUTIMEEditBox::CreateIMEEditBox( &g_MainStepStartUI, IDC_START_CONNECTIP, TEXT( SERVER_IPADDR ), SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, 160, 36, false, &pIMEEdit ) )
+		SUCCEEDED( CDXUTIMEEditBox::CreateIMEEditBox( &g_MainStepStartUI, IDC_START_CONNECTIP, SERVER_IPADDR, SCREEN_WIDTH / 2 - 80, SCREEN_HEIGHT / 2, 160, 36, false, &pIMEEdit ) )
 		)
 	{
 		g_MainStepStartUI.AddControl( pIMEEdit );

@@ -35,7 +35,7 @@ CCamera						g_Camera;
 
 TCHAR						g_Notice[ 512 ];
 
-char						g_ConnectIP[ IPV4_LENG + 1 ];
+std::wstring				g_ConnectIP;
 
 cMonitor										g_Monitor;
 

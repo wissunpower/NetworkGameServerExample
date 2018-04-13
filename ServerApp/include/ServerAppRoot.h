@@ -24,6 +24,8 @@
 #define		BUFSIZE		512
 
 
+class cConnection;
+
 
 namespace	MatchlessServer
 {
@@ -73,7 +75,7 @@ bool PrintPacket( const CNetMessage & msg );
 
 
 DWORD WINAPI ProcessClient_Accept( LPVOID arg );
-DWORD WINAPI ProcessClient_Recv( const SOCKET socket, cIPacket& iPacket );
+DWORD WINAPI ProcessClient_Recv( const cConnection& connection, cIPacket& iPacket );
 
 
 int InitLog();

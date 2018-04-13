@@ -1,6 +1,7 @@
 
 #include	"stdafx.h"
 #include	"ServerAppRoot.h"
+#include	"LibraryDef.h"
 #include	"cIocpMatchlessServer.h"
 #include	"cConnectionManager.h"
 #include	"cPacket.h"
@@ -10,6 +11,12 @@
 
 DWORD WINAPI ProcessClient_Accept( LPVOID arg )
 {
+	cConnection* pConnection = reinterpret_cast<cConnection*>( arg );
+	if ( nullptr == pConnection )
+	{
+		WriteLog( tstring{ _T( "[ Error ] : Invalied Connection Request in ProcessClient_Accept()" ) } );
+	}
+
 	SOCKADDR_IN				clientaddr;
 	int						addrlen;
 	Matchless::CClient		currentClient;
@@ -17,12 +24,12 @@ DWORD WINAPI ProcessClient_Accept( LPVOID arg )
 
 
 	// Get client information
-	currentClient.m_NetSystem.SetSocket( (SOCKET)arg );
+	currentClient.m_NetSystem.SetSocket( pConnection->GetSocket() );
 	addrlen = sizeof( clientaddr );
 	getpeername( currentClient.m_NetSystem.GetSocket(), (SOCKADDR*)&clientaddr, &addrlen );
 
 
-	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + wsp::to( inet_ntoa( clientaddr.sin_addr ) ) + _T( ", port number = " ) + wsp::to( ntohs( clientaddr.sin_port ) ) );
+	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + pConnection->GetConnectionIp() );
 
 	// Initialize server<->client connection
 	currentClient.m_NetSystem.SetID( currentID );
@@ -102,7 +109,7 @@ DWORD WINAPI ProcessClient_Accept( LPVOID arg )
 	return 0;
 }
 
-DWORD WINAPI ProcessClient_Recv( const SOCKET socket, cIPacket& iPacket )
+DWORD WINAPI ProcessClient_Recv( const cConnection& connection, cIPacket& iPacket )
 try {
 	Matchless::EMainStepState	tempMSS;
 	Matchless::ECharacterClass	tempCC;
@@ -116,7 +123,7 @@ try {
 
 	{
 		cMonitor::Owner lock { g_csClientID };
-		auto it = g_mClientID.find( socket );
+		auto it = g_mClientID.find( connection.GetSocket() );
 		if ( it != g_mClientID.end() )
 		{
 			tempID = it->second;
@@ -415,13 +422,8 @@ try {
 			g_mClientID.erase( tempID );
 		}
 
-		SOCKADDR_IN clientaddr;
-		int addrlen { sizeof( clientaddr ) };
-
 		{
 			cMonitor::Owner lock{ g_ClientListMonitor };
-
-			getpeername( socket, (SOCKADDR*)&clientaddr, &addrlen );
 
 			g_ClientList.erase( tempID );
 			for ( auto cIt = g_ClientList.begin(); cIt != g_ClientList.end(); ++cIt )
@@ -445,7 +447,7 @@ try {
 			ReturnClientID( tempID );
 		}
 
-		WriteLog( tstring{ _T( "[ Disconnect client ] : IP address = " ) } +wsp::to( inet_ntoa( clientaddr.sin_addr ) ) + _T( ", port number = " ) + wsp::to( ntohs( clientaddr.sin_port ) ) );
+		WriteLog( tstring{ _T( "[ Disconnect client ] : IP address = " ) } + connection.GetConnectionIp() );
 	}
 
 	//closesocket( currentClient.m_NetSystem.GetSocket() );
@@ -527,9 +529,10 @@ int main( int argc, char * argv[] )
 	initConfig.nWokerThreadCnt = si.dwNumberOfProcessors;
 	initConfig.nProcessThreadCnt = 1;
 
-	cSingleton< cIocpMatchlessServer >::Get()->ServerStart( initConfig );
+	cIocpMatchlessServer* pServer = cSingleton< cIocpMatchlessServer >::Get();
+	pServer->ServerStart( initConfig );
 
-	//OutputServerInitialInfo( serveraddr, listenSocket );
+	OutputServerInitialInfo( pServer->GetSockAddr(), pServer->GetListenSocket() );
 
 	cSingleton< cConnectionManager >::Get()->CreateConnection( initConfig, 20 );
 

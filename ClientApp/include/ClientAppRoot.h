@@ -47,7 +47,7 @@
 
 #define		VK_TABLE_MAX	0x0100
 
-#define		SERVER_IPADDR		"127.0.0.1"
+const LPCWSTR SERVER_IPADDR = L"127.0.0.1";
 #define		IPV4_LENG			16
 
 #define		SCREEN_WIDTH		800
@@ -134,7 +134,7 @@ extern CCamera						g_Camera;
 
 extern TCHAR						g_Notice[ 512 ];
 
-extern char							g_ConnectIP[ IPV4_LENG + 1 ];
+extern std::wstring					g_ConnectIP;
 
 extern cMonitor											g_Monitor;
 

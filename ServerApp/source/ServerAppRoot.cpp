@@ -1,6 +1,7 @@
 
 #include	"stdafx.h"
 #include	"ServerAppRoot.h"
+#include	"LibraryDef.h"
 #include	"cPacket.h"
 
 
@@ -200,11 +201,13 @@ int ReturnClientID( const unsigned int aID )
 
 int OutputServerInitialInfo( const SOCKADDR_IN & aAddrInfo, const SOCKET aListenSocket )
 {
+	std::vector< tchar > vHostName( NI_MAXHOST );
+	std::vector< tchar > vServInfo( NI_MAXSERV );
 	int	addrlen;
 	SOCKADDR_IN	tempAddr_in;
-	//IN_ADDR		tempAddr;
-	HOSTENT *	thisSystem = gethostbyaddr( (char*)&(aAddrInfo.sin_addr), 4, AF_INET );
-	if( NULL == thisSystem )
+
+	DWORD dwRet = GetNameInfo( (SOCKADDR*)&aAddrInfo, sizeof( SOCKADDR ), vHostName.data(), NI_MAXHOST, vServInfo.data(), NI_MAXSERV, NI_NUMERICSERV );
+	if( 0 != dwRet )
 	{
 		WriteLog( _T( "-- Failed get server information." ) );
 		return -1;
@@ -219,12 +222,7 @@ int OutputServerInitialInfo( const SOCKADDR_IN & aAddrInfo, const SOCKET aListen
 
 	WriteLog( _T( "-- Succeed launch server." ) );
 
-	WriteLog( tstring{ _T( "-- Server IP address : " ) } + wsp::to( inet_ntoa( tempAddr_in.sin_addr ) ) );
-	//for( int i = 0 ; thisSystem->h_addr_list[ i ] != 0 ; ++i )
-	//{
-	//	tempAddr.s_addr = *(u_long*)thisSystem->h_addr_list[ i ];
-	//	WriteLog( tstring{ _T( "\t#" ) } + wsp::to( i ) + _T( "\t" ) + inet_ntoa( tempAddr ) );
-	//}
+	WriteLog( tstring{ _T( "-- Server IP address : " ) } + Inet_Ntop( tempAddr_in ) + _T( ", " ) + tstring{ vHostName.data() } );
 
 	WriteLog( tstring{ _T( "-- Server port number : " ) } + wsp::to( ntohs( aAddrInfo.sin_port ) ) );
 
