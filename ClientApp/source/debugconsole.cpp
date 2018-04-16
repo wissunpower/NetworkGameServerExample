@@ -40,7 +40,7 @@ void DebugConsole::Output( char * fmt, ... )
 	if( !m_isAllocated ) return;
 
 	va_start( argptr, fmt );
-	iCnt = vsprintf( cBuf, fmt, argptr );
+	iCnt = vsprintf_s( cBuf, fmt, argptr );
 	va_end( argptr );
 
 	//콘솔에다가 출력 해주는 함수를 써줌

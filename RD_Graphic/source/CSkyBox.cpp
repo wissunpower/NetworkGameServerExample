@@ -1,4 +1,5 @@
 
+#include	"stdafx.h"
 #include	"CSkyBox.h"
 
 
@@ -49,6 +50,7 @@ HRESULT CSkyBox::Build( LPDIRECT3DDEVICE9 apDevice, LPCTSTR aSetName, DWORD aMes
 
 
 	HRESULT		hr;
+	tstring		tempStr;
 	TCHAR		tempCD[ MAX_PATH ];
 	TCHAR		tempPath[ MAX_PATH ];
 	TCHAR		tempName[ MAX_PATH / 4 ];
@@ -149,54 +151,54 @@ HRESULT CSkyBox::Build( LPDIRECT3DDEVICE9 apDevice, LPCTSTR aSetName, DWORD aMes
 	}
 
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Front.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Front.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures[ 0 ]  );
 	SetCurrentDirectory( tempCD );
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Back.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Back.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures[ 1 ]  );
 	SetCurrentDirectory( tempCD );
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Left.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Left.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures[ 2 ]  );
 	SetCurrentDirectory( tempCD );
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Right.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Right.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures[ 3 ]  );
 	SetCurrentDirectory( tempCD );
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Top.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Top.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures[ 4 ]  );
 	SetCurrentDirectory( tempCD );
 
-	_tcscpy( tempPath, aSetName );
-	_tcscpy( tempPath + _tcslen( aSetName ), TEXT( "Bottom.tga" ) );
-	RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tempStr = aSetName;
+	tempStr += TEXT( "Bottom.tga" );
+	RetrieveResourceFile( tempStr.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
 	GetCurrentDirectory( MAX_PATH, tempCD );
 	SetCurrentDirectory( tempPath );
 	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
