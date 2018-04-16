@@ -258,7 +258,7 @@ void CALLBACK OnFrameMove( double fTime, float fElapsedTime, void * pUserContext
 	}
 
 
-	g_GlobalUI.GetStatic( IDC_GLOBAL_NOTICE )->SetText( g_Notice );
+	g_GlobalUI.GetStatic( IDC_GLOBAL_NOTICE )->SetText( g_Notice.c_str() );
 
 
 	D3DXVECTOR3			tempCameraLookAt;
@@ -783,23 +783,23 @@ try {
 
 			if( bCreateSocketFailed )
 			{
-				_tcscpy( g_Notice, TEXT( "Failed create network socket." ) );
+				g_Notice = TEXT( "Failed create network socket." );
 			}
 			else if( bConnectToServerFailed )
 			{
-				_tcscpy( g_Notice, TEXT( "Failed connect to server." ) );
+				g_Notice = TEXT( "Failed connect to server." );
 			}
 			else if( bReceiveLoginDataFailed )
 			{
-				_tcscpy( g_Notice, TEXT( "Failed receive login data." ) );
+				g_Notice = TEXT( "Failed receive login data." );
 			}
 			else if( bLoginFailed )
 			{
-				_tcscpy( g_Notice, TEXT( "Failed login." ) );
+				g_Notice = TEXT( "Failed login." );
 			}
 			else
 			{
-				_tcscpy( g_Notice, TEXT( "Occur unknown error." ) );
+				g_Notice = TEXT( "Occur unknown error." );
 			}
 		}
 		else																								// Succeed connect to server
@@ -824,10 +824,10 @@ try {
 
 			if( NULL == CreateThread( NULL, 0, NetReceiveProcess, (LPVOID)g_ThisClient.m_NetSystem.GetSocket(), 0, &ThreadID ) )
 			{
-				_tcscpy( g_Notice, TEXT( "Failed create thread for receive network data" ) );
+				g_Notice = TEXT( "Failed create thread for receive network data" );
 			}
 
-			_tcscpy( g_Notice, TEXT( "Not found." ) );
+			g_Notice = TEXT( "Not found." );
 
 #ifdef	CS_TESTCODE_ON
 			g_Console.Output( "Succeed Server Connection\n" );
@@ -926,28 +926,16 @@ try {
 	}
 }
 catch ( const cException& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 }
 catch ( const std::runtime_error& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 }
 catch ( const std::exception& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 }
 catch ( ... ) {
-	_tcsncpy( g_Notice, _T( "Unknown Exception" ), 512 );
+	g_Notice = _T( "Unknown Exception" );
 }
 
 
@@ -961,7 +949,7 @@ int InitApp( void )
 	g_ThisClient.m_PlayerInfo.SetMainStepState( Matchless::EMSS_Start );
 	g_ThisClient.m_PlayerInfo.SetbRoomMaster( false );
 
-	_tcscpy( g_Notice, TEXT( "Not found." ) );
+	g_Notice = TEXT( "Not found." );
 	g_ConnectIP = SERVER_IPADDR;
 
 
@@ -999,7 +987,7 @@ int InitApp( void )
 	//g_GlobalUI.GetComboBox( IDC_METHOD )->AddItem( TEXT( "Fixed function non-indexed (s)kinning" ), (void*)D3DNONINDEXED );
 	//g_GlobalUI.GetComboBox( IDC_METHOD )->AddItem( TEXT( "Fixed function indexed (s)kinning" ), (void*)D3DINDEXED );
 	//g_GlobalUI.GetComboBox( IDC_METHOD )->AddItem( TEXT( "Software (s)kinning" ), (void*)SOFTWARE );
-	g_GlobalUI.AddStatic( IDC_GLOBAL_NOTICE, g_Notice, SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 4, 240, 60 );
+	g_GlobalUI.AddStatic( IDC_GLOBAL_NOTICE, g_Notice.c_str(), SCREEN_WIDTH / 2 - 120, SCREEN_HEIGHT / 4, 240, 60 );
 	g_GlobalUI.GetStatic( IDC_GLOBAL_NOTICE )->SetTextColor( D3DCOLOR_ARGB( 255, 255, 255, 0 ) );
 	g_GlobalUI.GetControl( IDC_GLOBAL_NOTICE )->GetElement( 0 )->dwTextFormat = DT_CENTER | DT_VCENTER | DT_WORDBREAK;
 

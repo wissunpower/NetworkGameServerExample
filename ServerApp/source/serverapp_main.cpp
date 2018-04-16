@@ -456,39 +456,27 @@ try {
 	return 0;
 }
 catch ( const cException& e ) {
-	TCHAR notice[ 512 ];
+	tstring notice;
 
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	notice = wsp::to( e.what() );
 
 	WriteLog( notice, { eLogInfoType::LOG_ERROR_HIGH } );
 
 	return 0xa0000003;
 }
 catch ( const std::runtime_error& e ) {
-	TCHAR notice[ 512 ];
+	tstring notice;
 
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	notice = wsp::to( e.what() );
 
 	WriteLog( notice, { eLogInfoType::LOG_ERROR_HIGH } );
 
 	return 0xa0000002;
 }
 catch ( const std::exception& e ) {
-	TCHAR notice[ 512 ];
+	tstring notice;
 
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	notice = wsp::to( e.what() );
 
 	WriteLog( notice, { eLogInfoType::LOG_ERROR_HIGH } );
 

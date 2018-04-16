@@ -33,7 +33,7 @@ Matchless::Timer			g_Timer( 60 );
 
 CCamera						g_Camera;
 
-TCHAR						g_Notice[ 512 ];
+tstring						g_Notice;
 
 std::wstring				g_ConnectIP;
 

@@ -288,34 +288,22 @@ try {
 	return 0;
 }
 catch ( const cException& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 
 	return 0xa0000003;
 }
 catch ( const std::runtime_error& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 
 	return 0xa0000002;
 }
 catch ( const std::exception& e ) {
-#if defined( UNICODE ) | defined( _UNICODE )
-	MultiByteToWideChar( CP_ACP, 0, e.what(), -1, g_Notice, 512 );
-#else
-	_tcsncpy( g_Notice, e.what(), 512 );
-#endif
+	g_Notice = wsp::to( e.what() );
 
 	return 0xa0000001;
 }
 catch ( ... ) {
-	_tcsncpy( g_Notice, _T( "Unknown Exception" ), 512 );
+	g_Notice = _T( "Unknown Exception" );
 
 	return 0xa0000000;
 }

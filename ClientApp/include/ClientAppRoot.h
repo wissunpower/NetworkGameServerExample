@@ -132,7 +132,7 @@ extern Matchless::Timer				g_Timer;
 
 extern CCamera						g_Camera;
 
-extern TCHAR						g_Notice[ 512 ];
+extern tstring						g_Notice;
 
 extern std::wstring					g_ConnectIP;
 
