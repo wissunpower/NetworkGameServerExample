@@ -4,41 +4,32 @@
 #include	"cPacket.h"
 
 
-int GetCharacterResourceName( const Matchless::ECharacterClass & aECC, LPTSTR apNameOut, unsigned int aNameLen )
+int GetCharacterResourceName( const Matchless::ECharacterClass & aECC, tstring& sNameOut )
 {
-	TCHAR	tempName[ MAX_PATH ];
-
 	switch( aECC )
 	{
 
 	case Matchless::ECC_Breaker:
-		_tcscpy( tempName, TEXT( "Character/Breaker/Character_Breaker.x" ) );
+		sNameOut = TEXT( "Character/Breaker/Character_Breaker.x" );
 		break;
 
 	case Matchless::ECC_Defender:
-		_tcscpy( tempName, TEXT( "Character/Defender/Character_Defender.x" ) );
+		sNameOut = TEXT( "Character/Defender/Character_Defender.x" );
 		break;
 
 	case Matchless::ECC_Mage:
-		_tcscpy( tempName, TEXT( "Character/Mage/Character_Mage.x" ) );
+		sNameOut = TEXT( "Character/Mage/Character_Mage.x" );
 		break;
 
 	case Matchless::ECC_Healer:
-		_tcscpy( tempName, TEXT( "Character/Healer/Character_Healer.x" ) );
+		sNameOut = TEXT( "Character/Healer/Character_Healer.x" );
 		break;
 
 	default:
-		_tcscpy( tempName, TEXT( "" ) );
+		sNameOut = TEXT( "" );
 		break;
 
 	}
-
-	if( _tcslen( tempName ) >= aNameLen )		// apNameOut has to have space include '\0'
-	{
-		return -1;
-	}
-
-	_tcscpy( apNameOut, tempName );
 
 	return 0;
 }
@@ -257,9 +248,9 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 		}
 	}
 
-
-	GetCharacterResourceName( g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass(), tempPath, MAX_PATH );
-	if( !FAILED( RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+	tstring sPath;
+	GetCharacterResourceName( g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass(), sPath );
+	if( !FAILED( RetrieveResourceFile( sPath.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
 	{
 		V_RETURN( g_ThisCharacter.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
 		g_ThisCharacter.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
@@ -296,8 +287,8 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 		cMonitor::Owner lock{ g_Monitor };
 		for ( auto cIt = g_AnotherClientList.begin() ; cIt != g_AnotherClientList.end() ; ++cIt )
 		{
-			GetCharacterResourceName( cIt->second.m_PlayerInfo.GetCharacterInfo().GetClass(), tempPath, MAX_PATH );
-			if ( !FAILED( RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+			GetCharacterResourceName( cIt->second.m_PlayerInfo.GetCharacterInfo().GetClass(), sPath );
+			if ( !FAILED( RetrieveResourceFile( sPath.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
 			{
 				auto amIt = g_AnotherCharacterList.insert( std::map< unsigned int, CAnimateMesh >::value_type( cIt->first, CAnimateMesh() ) ).first;
 				V_RETURN( amIt->second.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
