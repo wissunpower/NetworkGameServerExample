@@ -8,43 +8,36 @@ DWORD						g_dwBehaviorFlags;
 
 
 
-HRESULT RetrieveResourceFile( LPCTSTR const aSrcStr, LPTSTR aPath, int aPathLen, LPTSTR aName, int aNameLen )
+HRESULT RetrieveResourceFile( const tstring& sSrc, tstring& sPath, tstring& sName )
 {
-	if( aSrcStr[ 0 ] == 0  ||  aSrcStr <= 0  ||
-		aPath == NULL  ||  aPathLen <= 0  ||
-		aName == NULL  ||  aNameLen <= 0 )
+	if( sSrc.empty() )
 	{
 		return	E_INVALIDARG;
 	}
 
 
-	HRESULT		hr = S_OK;
-	TCHAR		tempStr[ MAX_PATH ];
+	HRESULT					hr = S_OK;
+	std::vector< tchar >	tempStr( MAX_PATH );
 
-	hr = DXUTFindDXSDKMediaFileCch( tempStr, MAX_PATH, aSrcStr );
+	hr = DXUTFindDXSDKMediaFileCch( tempStr.data(), tempStr.size(), sSrc.c_str() );
 	if( FAILED( hr ) )
 	{
 		return	hr;
 	}
 
-	TCHAR	tempPath[ MAX_PATH ];
-	TCHAR *	pLastSlash;
+	tstring sTempPath = tempStr.data();
+	auto nLastSlash = sTempPath.find_last_of( _T( '/' ) );
 
-	_tcsncpy( tempPath, tempStr, MAX_PATH );
-	pLastSlash = _tcsrchr( tempPath, TEXT( '/' ) );
-	if( pLastSlash )
+	if( tstring::npos != nLastSlash )
 	{
-		*pLastSlash = 0;
-		++pLastSlash;
+		sPath = sTempPath.substr( 0, nLastSlash );
+		sName = sTempPath.substr( nLastSlash + 1, sTempPath.size() - ( nLastSlash + 1 ) );
 	}
 	else
 	{
-		_tcsncpy( tempPath, TEXT( "." ), MAX_PATH );
-		pLastSlash = tempStr;
+		sPath = _T( "." );
+		sName = tempStr.data();
 	}
-
-	_tcsncpy( aPath, tempPath, aPathLen );
-	_tcsncpy( aName, pLastSlash, aNameLen );
 
 	return	hr;
 }

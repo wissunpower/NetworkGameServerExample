@@ -43,8 +43,6 @@ HRESULT CBackground::Build( IDirect3DDevice9 * apDevice, LPCTSTR aFileName, DWOR
 
 	HRESULT		hr;
 	TCHAR		tempCD[ MAX_PATH ];
-	TCHAR		tempPath[ MAX_PATH ];
-	TCHAR		tempName[ MAX_PATH / 4 ];
 
 
 	if( FAILED( hr = D3DXCreateMeshFVF( 2, 4, aMeshOptions, D3DFVF_XYZ | D3DFVF_TEX1, apDevice, &m_pd3dxMesh ) ) )
@@ -99,10 +97,12 @@ HRESULT CBackground::Build( IDirect3DDevice9 * apDevice, LPCTSTR aFileName, DWOR
 	m_Materials.Ambient = D3DXCOLOR( 1.0f, 1.0f, 1.0f, 1.0f );
 
 
-	RetrieveResourceFile( aFileName, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tstring		sPath;
+	tstring		sName;
+	RetrieveResourceFile( aFileName, sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
+	SetCurrentDirectory( sPath.c_str() );
+	hr = D3DXCreateTextureFromFileEx(  apDevice,  sName.c_str(),  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  D3DPOOL_MANAGED,
 										D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &m_pTextures  );
 	SetCurrentDirectory( tempCD );
 

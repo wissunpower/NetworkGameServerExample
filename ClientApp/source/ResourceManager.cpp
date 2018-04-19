@@ -37,24 +37,23 @@ int GetCharacterResourceName( const Matchless::ECharacterClass & aECC, tstring& 
 
 int InitializeCharacterMesh( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3DXLOADUSERDATA apUserDataLoader )
 {
-	TCHAR	tempPath[ MAX_PATH ];
-	TCHAR	tempName[ MAX_PATH / 4 ];
+	tstring		sPath;
+	tstring		sName;
 
-
-	RetrieveResourceFile( TEXT( "Character/Breaker/Character_Breaker.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	g_BreakerMesh.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader );
+	RetrieveResourceFile( _T( "Character/Breaker/Character_Breaker.x" ), sPath, sName );
+	g_BreakerMesh.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader );
 	g_BreakerMesh.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 
-	RetrieveResourceFile( TEXT( "Character/Defender/Character_Defender.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	g_DefenderMesh.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader );
+	RetrieveResourceFile( _T( "Character/Defender/Character_Defender.x" ), sPath, sName );
+	g_DefenderMesh.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader );
 	g_DefenderMesh.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 
-	RetrieveResourceFile( TEXT( "Character/Mage/Character_Mage.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	g_MageMesh.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader );
+	RetrieveResourceFile( _T( "Character/Mage/Character_Mage.x" ), sPath, sName );
+	g_MageMesh.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader );
 	g_MageMesh.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 
-	RetrieveResourceFile( TEXT( "Character/Healer/Character_Healer.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	g_HealerMesh.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader );
+	RetrieveResourceFile( _T( "Character/Healer/Character_Healer.x" ), sPath, sName );
+	g_HealerMesh.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader );
 	g_HealerMesh.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 
 	return 0;
@@ -82,8 +81,8 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 
 	HRESULT		hr;
 	bool		tempBool;
-	TCHAR		tempPath[ MAX_PATH ];
-	TCHAR		tempName[ MAX_PATH / 4 ];
+	tstring		sPath;
+	tstring		sName;
 	D3DXMATRIX	tempMtx;
 	CNetMessage	tempMessage;
 
@@ -95,12 +94,12 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 	LPD3DXBUFFER	pAttributes;
 
 
-	RetrieveResourceFile( TEXT( "Character/Teammark_Home.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "Character/Teammark_Home.x" ), sPath, sName );
 
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
+	SetCurrentDirectory( sPath.c_str() );
 
-	V_RETURN( D3DXLoadMeshFromX( tempName, D3DXMESH_MANAGED, apDevice, NULL, &pAttributes, NULL, &g_NumHomeTeamMarkMaterial, &g_pHomeTeamMark ) );
+	V_RETURN( D3DXLoadMeshFromX( sName.c_str(), D3DXMESH_MANAGED, apDevice, NULL, &pAttributes, NULL, &g_NumHomeTeamMarkMaterial, &g_pHomeTeamMark ) );
 
 	if( g_NumHomeTeamMarkMaterial > 0 )
 	{
@@ -164,12 +163,12 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 	}
 
 
-	RetrieveResourceFile( TEXT( "Character/Teammark_Away.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "Character/Teammark_Away.x" ), sPath, sName );
 
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
+	SetCurrentDirectory( sPath.c_str() );
 
-	V_RETURN( D3DXLoadMeshFromX( tempName, D3DXMESH_MANAGED, apDevice, NULL, &pAttributes, NULL, &g_NumAwayTeamMarkMaterial, &g_pAwayTeamMark ) );
+	V_RETURN( D3DXLoadMeshFromX( sName.c_str(), D3DXMESH_MANAGED, apDevice, NULL, &pAttributes, NULL, &g_NumAwayTeamMarkMaterial, &g_pAwayTeamMark ) );
 
 	if( g_NumAwayTeamMarkMaterial > 0 )
 	{
@@ -248,11 +247,10 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 		}
 	}
 
-	tstring sPath;
 	GetCharacterResourceName( g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass(), sPath );
-	if( !FAILED( RetrieveResourceFile( sPath.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+	if( !FAILED( RetrieveResourceFile( sPath, sPath, sName ) ) )
 	{
-		V_RETURN( g_ThisCharacter.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
+		V_RETURN( g_ThisCharacter.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader ) );
 		g_ThisCharacter.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 		for( int i = 0 ; i < 4 ; ++i )
 		{
@@ -288,10 +286,10 @@ int CreateGraphicResource( DWORD aMeshOptions, LPDIRECT3DDEVICE9 apDevice, LPD3D
 		for ( auto cIt = g_AnotherClientList.begin() ; cIt != g_AnotherClientList.end() ; ++cIt )
 		{
 			GetCharacterResourceName( cIt->second.m_PlayerInfo.GetCharacterInfo().GetClass(), sPath );
-			if ( !FAILED( RetrieveResourceFile( sPath.c_str(), tempPath, MAX_PATH, tempName, MAX_PATH / 4 ) ) )
+			if ( !FAILED( RetrieveResourceFile( sPath, sPath, sName ) ) )
 			{
 				auto amIt = g_AnotherCharacterList.insert( std::map< unsigned int, CAnimateMesh >::value_type( cIt->first, CAnimateMesh() ) ).first;
-				V_RETURN( amIt->second.LoadFromX( tempPath, tempName, aMeshOptions, apDevice, apUserDataLoader ) );
+				V_RETURN( amIt->second.LoadFromX( sPath.c_str(), sName.c_str(), aMeshOptions, apDevice, apUserDataLoader ) );
 				amIt->second.SetIdleAnimationSet( CHARACTER_ANIINDEX_IDLE );
 				amIt->second.MoveOnYAxis(
 					GetDistanceWithMesh( &tempBool, amIt->second.GetPosition(), amIt->second.GetYAxis(), g_pTerrain, g_TerrainTransform )
@@ -382,8 +380,8 @@ int DestroyGraphicResource( void )
 HRESULT CreateTerrain( IDirect3DDevice9 * pd3dDevice )
 {
 	HRESULT		hr;
-	TCHAR	tempPath[ MAX_PATH ];
-	TCHAR	tempName[ MAX_PATH / 4 ];
+	tstring		sPath;
+	tstring		sName;
 
 
 	TCHAR	tempCD[ MAX_PATH ];
@@ -394,19 +392,19 @@ HRESULT CreateTerrain( IDirect3DDevice9 * pd3dDevice )
 		cMonitor::Owner lock{ g_Monitor };
 		if ( 0 == g_CurrentMapKind )
 		{
-			RetrieveResourceFile( TEXT( "Terrain/Terrain1/Terrain_Terrain1.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+			RetrieveResourceFile( TEXT( "Terrain/Terrain1/Terrain_Terrain1.x" ), sPath, sName );
 		}
 		else
 		{
-			RetrieveResourceFile( TEXT( "Terrain/Terrain2/Terrain_Terrain2.x" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+			RetrieveResourceFile( TEXT( "Terrain/Terrain2/Terrain_Terrain2.x" ), sPath, sName );
 		}
 	}
 
 
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
+	SetCurrentDirectory( sPath.c_str() );
 
-	V_RETURN( D3DXLoadMeshFromX( tempName, D3DXMESH_MANAGED, pd3dDevice, NULL, &pAttributes, NULL, &g_NumTerrainMaterial, &g_pTerrain ) );
+	V_RETURN( D3DXLoadMeshFromX( sName.c_str(), D3DXMESH_MANAGED, pd3dDevice, NULL, &pAttributes, NULL, &g_NumTerrainMaterial, &g_pTerrain ) );
 
 	if( g_NumTerrainMaterial > 0 )
 	{

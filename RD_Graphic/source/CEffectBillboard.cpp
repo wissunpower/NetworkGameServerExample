@@ -78,8 +78,6 @@ HRESULT CEffectBillboard::Build(  IDirect3DDevice9 * apDevice,  LPCTSTR aSetName
 	int			panelWidth = SIZE_UNIT * aSize;
 	int			panelHeight = SIZE_UNIT * aSize;
 	TCHAR		tempCD[ MAX_PATH ];
-	TCHAR		tempPath[ MAX_PATH ];
-	TCHAR		tempName[ MAX_PATH / 4 ];
 
 
 	if( FAILED( hr = D3DXCreateMeshFVF( 2, 4, aMeshOptions, D3DFVF_XYZ | D3DFVF_TEX1, apDevice, &m_pd3dxMesh ) ) )
@@ -129,16 +127,24 @@ HRESULT CEffectBillboard::Build(  IDirect3DDevice9 * apDevice,  LPCTSTR aSetName
 	}
 
 
+	tstring			sPath;
+	tstring			sName;
+
 	for( int i = aStartFrame ; i < (aFrameNum + aStartFrame) ; ++i )
 	{
 		IDirect3DTexture9 *		tempTex;
 
-		_swprintf( tempPath, TEXT( "%s%04d.tga" ), aSetName, i );
-		RetrieveResourceFile( tempPath, tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+		tstringstream	tss;
+		tss << aSetName;
+		tss.width( 4 );
+		tss.fill( _T( '0' ) );
+		tss << i << _T( ".tga" );
+		sPath = tss.str();
+		RetrieveResourceFile( sPath, sPath, sName );
 		GetCurrentDirectory( MAX_PATH, tempCD );
-		SetCurrentDirectory( tempPath );
+		SetCurrentDirectory( sPath.c_str() );
 
-		hr = D3DXCreateTextureFromFileEx(  apDevice,  tempName,  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  aPoolType,
+		hr = D3DXCreateTextureFromFileEx(  apDevice,  sName.c_str(),  D3DX_DEFAULT,  D3DX_DEFAULT,  0,  0,  D3DFMT_UNKNOWN,  aPoolType,
 											D3DX_DEFAULT,  D3DX_DEFAULT,  0xFF000000,  NULL,  NULL,  &tempTex  );
 
 		//D3DXCreateTextureFromFile( apDevice, tempName, &tempTex );

@@ -17,7 +17,7 @@ extern	DWORD			g_dwBehaviorFlags;
 
 
 
-HRESULT RetrieveResourceFile( LPCTSTR const aSrcStr, LPTSTR aPath, int aPathLen, LPTSTR aName, int aNameLen );
+HRESULT RetrieveResourceFile( const tstring& sSrc, tstring& sPath, tstring& sName );
 float GetDistanceWithMesh( bool * apHit, const D3DXVECTOR3 & aPosition, const D3DXVECTOR3 & aDirection,
 							const LPD3DXBASEMESH apMesh, const D3DXMATRIX & aMeshTransform );
 

@@ -90,8 +90,6 @@ bool CALLBACK ModifyDeviceSettings( DXUTDeviceSettings * pDeviceSettings, void *
 HRESULT CALLBACK OnCreateDevice( IDirect3DDevice9 * pd3dDevice, const D3DSURFACE_DESC * pBackBufferSurfaceDesc, void * pUserContext )
 {
 	HRESULT				hr;
-	TCHAR				tempPath[ MAX_PATH ];
-	TCHAR				tempName[ MAX_PATH / 4 ];
 	TCHAR				tempCD[ MAX_PATH ];
 
 	D3DXIMAGE_INFO		tempImgInfo;
@@ -131,357 +129,360 @@ HRESULT CALLBACK OnCreateDevice( IDirect3DDevice9 * pd3dDevice, const D3DSURFACE
 	g_dwBehaviorFlags = cp.BehaviorFlags;
 
 
-	RetrieveResourceFile( TEXT( "UI/CharacterEmblem/Emblem_Breaker.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	tstring		sPath;
+	tstring		sName;
+
+	RetrieveResourceFile( _T( "UI/CharacterEmblem/Emblem_Breaker.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerEmblem ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerEmblem ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/CharacterEmblem/Emblem_Defender.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/CharacterEmblem/Emblem_Defender.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderEmblem ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderEmblem ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/CharacterEmblem/Emblem_Mage.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/CharacterEmblem/Emblem_Mage.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageEmblem ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageEmblem ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/CharacterEmblem/Emblem_Healer.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/CharacterEmblem/Emblem_Healer.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerEmblem ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerEmblem ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/TerrainEmblem/Terrain1Emblem.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/TerrainEmblem/Terrain1Emblem.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexTerrain1Emblem ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexTerrain1Emblem ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/TerrainEmblem/Terrain2Emblem.bmp" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/TerrainEmblem/Terrain2Emblem.bmp" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexTerrain2Emblem ) );
-	SetCurrentDirectory( tempCD );
-
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/GaugePanel.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGaugePanel ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/SkillPanel.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexSkillPanel ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/HealthGauge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoHealthGauge, NULL, &g_pTexHealthGauge ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/EnergyGauge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoEnergyGauge, NULL, &g_pTexEnergyGauge ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/GameLeaveButton.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGameLeaveButton ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/GameStartButton.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGameStartButton ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AwayPartyWord.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAwayPartyWord ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/HomePartyWord.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHomePartyWord ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/PartyInfoFrame.png" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &tempImgInfo, NULL, &g_pTexPartyInfoFrame ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AnCharInfoFrame.png" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnCharInfoFrame ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AnEnergyBar.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoAnEnergyBar, NULL, &g_pTexAnEnergyBar ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AnEnergyGauge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnEnergyGauge ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AnHealthBar.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoAnHealthBar, NULL, &g_pTexAnHealthBar ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/AnHealthGauge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnHealthGauge ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/CastBarGauge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgCastBarGauge, NULL, &g_pTexCastBarGauge ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/PlayPanel/CastBarGrowth.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgCastBarGrowth, NULL, &g_pTexCastBarGrowth ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexTerrain2Emblem ) );
 	SetCurrentDirectory( tempCD );
 
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/NormalAttack.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/GaugePanel.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerNormalAttackIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGaugePanel ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/Raid.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/SkillPanel.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerRaidIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexSkillPanel ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/Stun.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/HealthGauge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerStunIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoHealthGauge, NULL, &g_pTexHealthGauge ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/ArmorBreak.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/EnergyGauge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerArmorBreakIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoEnergyGauge, NULL, &g_pTexEnergyGauge ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/PowerBreak.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/GameLeaveButton.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerPowerBreakIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGameLeaveButton ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/Berserk.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/GameStartButton.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerBerserkIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexGameStartButton ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/Charge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AwayPartyWord.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerChargeIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAwayPartyWord ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/Silent.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/HomePartyWord.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerSilentIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHomePartyWord ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Breaker/LastHit.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/PartyInfoFrame.png" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerLastHitIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &tempImgInfo, NULL, &g_pTexPartyInfoFrame ) );
 	SetCurrentDirectory( tempCD );
 
-
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/NormalAttack.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AnCharInfoFrame.png" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderNormalAttackIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnCharInfoFrame ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/StoneSkin.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AnEnergyBar.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderStoneSkinIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoAnEnergyBar, NULL, &g_pTexAnEnergyBar ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/Natural.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AnEnergyGauge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderNaturalIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnEnergyGauge ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/Sacrifice.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AnHealthBar.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderSacrificeIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgInfoAnHealthBar, NULL, &g_pTexAnHealthBar ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/AttackBreak.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/AnHealthGauge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderAttackBreakIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexAnHealthGauge ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/HeavyBlow.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/CastBarGauge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderHeavyBlowIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgCastBarGauge, NULL, &g_pTexCastBarGauge ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/SpiritLink.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/PlayPanel/CastBarGrowth.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderSpiritLinkIcon ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/Earthquake.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderEarthquakeIcon ) );
-	SetCurrentDirectory( tempCD );
-
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Defender/FullThrow.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
-	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderFullThrowIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, &g_ImgCastBarGrowth, NULL, &g_pTexCastBarGrowth ) );
 	SetCurrentDirectory( tempCD );
 
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/NormalAttack.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/NormalAttack.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageNormalAttackIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerNormalAttackIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/IceShield.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/Raid.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageIceShieldIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerRaidIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/MagicalArmor.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/Stun.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageMagicalArmorIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerStunIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/IceBolt.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/ArmorBreak.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageIceBoltIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerArmorBreakIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/FireBall.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/PowerBreak.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageFireBallIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerPowerBreakIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/Blizzard.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/Berserk.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageBlizzardIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerBerserkIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/FairyRescue.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/Charge.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageFairyRescueIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerChargeIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/ChainLightning.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/Silent.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageChainLightningIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerSilentIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Mage/LightningEmission.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Breaker/LastHit.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageLightningEmissionIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexBreakerLastHitIcon ) );
 	SetCurrentDirectory( tempCD );
 
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/NormalAttack.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/NormalAttack.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerNormalAttackIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderNormalAttackIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/Perfect.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/StoneSkin.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerPerfectIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderStoneSkinIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/QuickHeal.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/Natural.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerQuickHealIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderNaturalIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/NormalHeal.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/Sacrifice.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerNormalHealIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderSacrificeIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/LandBlessing.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/AttackBreak.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerLandBlessingIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderAttackBreakIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/Dispel.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/HeavyBlow.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerDispelIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderHeavyBlowIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/FreePromise.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/SpiritLink.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerFreePromiseIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderSpiritLinkIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/SoulCry.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/Earthquake.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerSoulCryIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderEarthquakeIcon ) );
 	SetCurrentDirectory( tempCD );
 
-	RetrieveResourceFile( TEXT( "UI/SkillIcon/Healer/Discharge.tga" ), tempPath, MAX_PATH, tempName, MAX_PATH / 4 );
+	RetrieveResourceFile( _T( "UI/SkillIcon/Defender/FullThrow.tga" ), sPath, sName );
 	GetCurrentDirectory( MAX_PATH, tempCD );
-	SetCurrentDirectory( tempPath );
-	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, tempName, D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerDischargeIcon ) );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexDefenderFullThrowIcon ) );
+	SetCurrentDirectory( tempCD );
+
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/NormalAttack.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageNormalAttackIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/IceShield.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageIceShieldIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/MagicalArmor.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageMagicalArmorIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/IceBolt.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageIceBoltIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/FireBall.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageFireBallIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/Blizzard.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageBlizzardIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/FairyRescue.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageFairyRescueIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/ChainLightning.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageChainLightningIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Mage/LightningEmission.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexMageLightningEmissionIcon ) );
+	SetCurrentDirectory( tempCD );
+
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/NormalAttack.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerNormalAttackIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/Perfect.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerPerfectIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/QuickHeal.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerQuickHealIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/NormalHeal.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerNormalHealIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/LandBlessing.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerLandBlessingIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/Dispel.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerDispelIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/FreePromise.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerFreePromiseIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/SoulCry.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerSoulCryIcon ) );
+	SetCurrentDirectory( tempCD );
+
+	RetrieveResourceFile( _T( "UI/SkillIcon/Healer/Discharge.tga" ), sPath, sName );
+	GetCurrentDirectory( MAX_PATH, tempCD );
+	SetCurrentDirectory( sPath.c_str() );
+	V_RETURN( D3DXCreateTextureFromFileEx( pd3dDevice, sName.c_str(), D3DX_DEFAULT, D3DX_DEFAULT, 1, 0, D3DFMT_UNKNOWN, D3DPOOL_MANAGED, 0x00000001, 0x00000001, 0x00FFFFFF, NULL, NULL, &g_pTexHealerDischargeIcon ) );
 	SetCurrentDirectory( tempCD );
 
 
