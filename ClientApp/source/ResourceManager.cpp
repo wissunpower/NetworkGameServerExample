@@ -546,7 +546,7 @@ HRESULT DrawGameWaitUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 	float						tempFriendHeight;
 	float						tempEnemyWidth;
 	float						tempEnemyHeight;
-	TCHAR						tempStr[ 32 ];
+	tstring						tempStr;
 	D3DXMATRIX					tempMatrix;
 
 
@@ -610,8 +610,9 @@ HRESULT DrawGameWaitUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 
 	txtHelper.SetInsertionPos( (int)(tempFriendWidth + 64.0f), (int)tempPos.y );
 	txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	_stprintf( tempStr, TEXT( "My ID : %u" ), g_ThisClient.m_NetSystem.GetID() );
-	txtHelper.DrawTextLine( tempStr );
+	tempStr = TEXT( "My ID : " );
+	tempStr += wsp::to( g_ThisClient.m_NetSystem.GetID() );
+	txtHelper.DrawTextLine( tempStr.c_str() );
 
 	tempPos.y = tempFriendHeight;
 	tempFriendHeight += 60.0f;
@@ -669,8 +670,9 @@ HRESULT DrawGameWaitUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 
 			txtHelper.SetInsertionPos( (int)( tempPos.x + 64.0f ), (int)tempPos.y );
 			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-			_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
-			txtHelper.DrawTextLine( tempStr );
+			tempStr = _T( "ID : " );
+			tempStr += wsp::to( acIter->second.m_NetSystem.GetID() );
+			txtHelper.DrawTextLine( tempStr.c_str() );
 		}
 	}
 
@@ -740,7 +742,7 @@ HRESULT DrawGamePlayUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 	float						tempFriendHeight;
 	float						tempEnemyWidth;
 	float						tempEnemyHeight;
-	TCHAR						tempStr[ 32 ];
+	tstring						tempStr;
 	RECT						tempRect;
 	D3DXMATRIX					tempMatrix;
 
@@ -860,8 +862,9 @@ HRESULT DrawGamePlayUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 
 			txtHelper.SetInsertionPos( (int)( tempPos.x + 64.0f ), (int)tempPos.y - 5 );
 			txtHelper.SetForegroundColor( D3DXCOLOR( 0.0f, 0.0f, 0.0f, 1.0f ) );
-			_stprintf( tempStr, TEXT( "ID : %u" ), acIter->second.m_NetSystem.GetID() );
-			txtHelper.DrawTextLine( tempStr );
+			tempStr = _T( "ID : " );
+			tempStr += wsp::to( acIter->second.m_NetSystem.GetID() );
+			txtHelper.DrawTextLine( tempStr.c_str() );
 		}
 	}
 

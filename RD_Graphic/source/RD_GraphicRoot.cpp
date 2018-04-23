@@ -19,7 +19,7 @@ HRESULT RetrieveResourceFile( const tstring& sSrc, tstring& sPath, tstring& sNam
 	HRESULT					hr = S_OK;
 	std::vector< tchar >	tempStr( MAX_PATH );
 
-	hr = DXUTFindDXSDKMediaFileCch( tempStr.data(), tempStr.size(), sSrc.c_str() );
+	hr = DXUTFindDXSDKMediaFileCch( tempStr.data(), static_cast<int>( tempStr.size() ), sSrc.c_str() );
 	if( FAILED( hr ) )
 	{
 		return	hr;
