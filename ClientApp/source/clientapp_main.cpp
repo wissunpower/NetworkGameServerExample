@@ -856,7 +856,7 @@ try {
 	case IDC_WAIT_CHARSELECT:
 		{
 			cMonitor::Owner lock{ g_Monitor };
-			g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( (Matchless::ECharacterClass)(unsigned int)((CDXUTComboBox*)pControl)->GetSelectedData() );
+			g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( VoidPtrToCharacterClass( ((CDXUTComboBox*)pControl)->GetSelectedData() ) );
 			tempCharacterClass = g_ThisClient.m_PlayerInfo.GetCharacterInfo().GetClass();
 
 			cOPacket oPacket;
@@ -869,7 +869,7 @@ try {
 	case IDC_WAIT_TEAMSELECT:
 		{
 			cMonitor::Owner lock{ g_Monitor };
-			g_ThisClient.m_PlayerInfo.SetTeamNum( tempTN = (unsigned short int)((CDXUTComboBox*)pControl)->GetSelectedData() );
+			g_ThisClient.m_PlayerInfo.SetTeamNum( tempTN = VoidPtrToShort( ((CDXUTComboBox*)pControl)->GetSelectedData() ) );
 
 			cOPacket oPacket;
 			oPacket.Encode4u( Matchless::FCTS_TEAM_UPDATE );
@@ -1029,9 +1029,7 @@ int InitApp( void )
 		pComboBox->AddItem( TEXT( "Mage" ), (void*)Matchless::ECC_Mage );
 		pComboBox->AddItem( TEXT( "Healer" ), (void*)Matchless::ECC_Healer );
 	}
-	g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass(
-		(Matchless::ECharacterClass)(unsigned int)g_MainStepWaitUI.GetComboBox( IDC_WAIT_CHARSELECT )->GetSelectedData()
-		);
+	g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( VoidPtrToCharacterClass( g_MainStepWaitUI.GetComboBox( IDC_WAIT_CHARSELECT )->GetSelectedData() ) );
 
 	g_MainStepWaitUI.AddComboBox( IDC_WAIT_TEAMSELECT, SCREEN_WIDTH / 2 - 90, SCREEN_HEIGHT / 4 * 3, 180, 30, TEXT( 'T' ), false, &pComboBox );
 	if( pComboBox )
@@ -1040,9 +1038,7 @@ int InitApp( void )
 		pComboBox->AddItem( TEXT( "1 Team" ), (void*)1 );
 		pComboBox->AddItem( TEXT( "2 Team" ), (void*)2 );
 	}
-	g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass(
-		(Matchless::ECharacterClass)(unsigned int)g_MainStepWaitUI.GetComboBox( IDC_WAIT_TEAMSELECT )->GetSelectedData()
-		);
+	g_ThisClient.m_PlayerInfo.GetCharacterInfo().SetClass( VoidPtrToCharacterClass( g_MainStepWaitUI.GetComboBox( IDC_WAIT_TEAMSELECT )->GetSelectedData() ) );
 
 	g_MainStepWaitUI.AddButton( IDC_WAIT_MAPSELECT_PREV, TEXT( "PREV" ), 42, SCREEN_HEIGHT - 84, 72, 42 );
 	g_MainStepWaitUI.AddButton( IDC_WAIT_MAPSELECT_NEXT, TEXT( "NEXT" ), 42 + 100, SCREEN_HEIGHT - 84, 72, 42 );

@@ -190,7 +190,7 @@ HRESULT CEffectBillboard::UpdatePerFrame( const unsigned int aIndex )
 
 	if( m_TexList.size() > aIndex )
 	{
-		int i = 0;
+		auto i = 0U;
 		for( std::list< IDirect3DTexture9* >::iterator tIter = m_TexList.begin()  ;
 			tIter != m_TexList.end()  &&  i < m_TexList.size()  ;
 			++tIter, ++i )

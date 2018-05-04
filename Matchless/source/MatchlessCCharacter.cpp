@@ -210,7 +210,7 @@ void Matchless::Decode( cIPacket& iPacket, CCharacter& info )
 	auto& stateList = info.GetStateList();
 	stateList.clear();
 	size_t nStateCount = iPacket.Decode4u();
-	for( auto i = 0 ; i < nStateCount ; ++i )
+	for( auto i = 0U ; i < nStateCount ; ++i )
 	{
 		CState state;
 		Decode( iPacket, state );

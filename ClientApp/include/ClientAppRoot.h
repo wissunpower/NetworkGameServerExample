@@ -335,6 +335,10 @@ bool LoadSound( void );
 bool ReleaseSound( void );
 
 
+Matchless::ECharacterClass VoidPtrToCharacterClass( const void* src );
+unsigned short VoidPtrToShort( const void* src );
+
+
 
 
 #endif		// __CLIENTAPPROOT_H_29j3r_e92u3_u8239__
