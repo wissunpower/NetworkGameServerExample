@@ -1026,8 +1026,8 @@ HRESULT DrawGamePlayUI( ID3DXSprite * pSprite, ID3DXFont * pFont, const D3DSURFA
 	}
 
 
-#undef		TX( x )
-#undef		TY( y )
+#undef		TX
+#undef		TY
 
 
 	return	hr;
