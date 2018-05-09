@@ -5,4 +5,7 @@
 #pragma warning( disable : 4275 )
 
 
+#include	<memory>
+
+
 #include	"wspstr.h"

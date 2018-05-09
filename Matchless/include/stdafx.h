@@ -6,3 +6,6 @@
 
 
 #include	<WinSock2.h>
+
+
+#include	<memory>
