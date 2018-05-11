@@ -74,7 +74,7 @@ bool IsNowCasting( const unsigned int aID, const bool aIsCancel );
 bool PrintPacket( const CNetMessage & msg );
 
 
-DWORD WINAPI ProcessClient_Accept( LPVOID arg );
+DWORD WINAPI ProcessClient_Accept( const cConnection& connection );
 DWORD WINAPI ProcessClient_Recv( const cConnection& connection, cIPacket& iPacket );
 
 

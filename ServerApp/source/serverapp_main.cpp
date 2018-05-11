@@ -9,14 +9,8 @@
 
 
 
-DWORD WINAPI ProcessClient_Accept( LPVOID arg )
+DWORD WINAPI ProcessClient_Accept( const cConnection& connection )
 {
-	cConnection* pConnection = reinterpret_cast<cConnection*>( arg );
-	if ( nullptr == pConnection )
-	{
-		WriteLog( tstring{ _T( "[ Error ] : Invalied Connection Request in ProcessClient_Accept()" ) } );
-	}
-
 	SOCKADDR_IN				clientaddr;
 	int						addrlen;
 	Matchless::CClient		currentClient;
@@ -24,12 +18,12 @@ DWORD WINAPI ProcessClient_Accept( LPVOID arg )
 
 
 	// Get client information
-	currentClient.m_NetSystem.SetSocket( pConnection->GetSocket() );
+	currentClient.m_NetSystem.SetSocket( connection.GetSocket() );
 	addrlen = sizeof( clientaddr );
 	getpeername( currentClient.m_NetSystem.GetSocket(), (SOCKADDR*)&clientaddr, &addrlen );
 
 
-	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + pConnection->GetConnectionIp() );
+	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + connection.GetConnectionIp() );
 
 	// Initialize server<->client connection
 	currentClient.m_NetSystem.SetID( currentID );
@@ -536,7 +530,8 @@ int main( int argc, char * argv[] )
 		WriteLog( _T( "[ Error ] : Failed create thread!" ), { eLogInfoType::LOG_ERROR_HIGH } );
 	}
 
-	while ( true )
+	bool bContinue = true;
+	while ( bContinue )
 	{
 	}
 
