@@ -464,7 +464,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 			cOPacket oPacket1;
 			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( casterID );
 			oPacket1.Encode4u( tempCDT );
 			oPacket1.Encode4u( tempAmount );
 
@@ -908,7 +908,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 			tempAmount = aCaster.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy();
 			cOPacket oPacket1;
 			oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-			oPacket1.Encode4u( targetID );
+			oPacket1.Encode4u( casterID );
 			oPacket1.Encode4u( tempCDT );
 			oPacket1.Encode4u( tempAmount );
 
@@ -996,7 +996,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempCDT = Matchless::ECDT_CurrentEnergy;
 				cOPacket oPacket1;
 				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( casterID );
 				oPacket1.Encode4u( tempCDT );
 				oPacket1.Encode4u( tempAmount );
 
@@ -1083,7 +1083,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempCDT = Matchless::ECDT_CurrentEnergy;
 				cOPacket oPacket1;
 				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( casterID );
 				oPacket1.Encode4u( tempCDT );
 				oPacket1.Encode4u( tempAmount );
 
@@ -1216,7 +1216,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempCDT = Matchless::ECDT_CurrentEnergy;
 				cOPacket oPacket1;
 				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( casterID );
 				oPacket1.Encode4u( tempCDT );
 				oPacket1.Encode4u( tempAmount );
 
@@ -1291,7 +1291,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				tempCDT = Matchless::ECDT_CurrentEnergy;
 				cOPacket oPacket1;
 				oPacket1.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
-				oPacket1.Encode4u( targetID );
+				oPacket1.Encode4u( casterID );
 				oPacket1.Encode4u( tempCDT );
 				oPacket1.Encode4u( tempAmount );
 
