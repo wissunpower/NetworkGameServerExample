@@ -13,67 +13,68 @@ DWORD WINAPI ProcessClient_Accept( const cConnection& connection )
 {
 	SOCKADDR_IN				clientaddr;
 	int						addrlen;
-	Matchless::CClient		currentClient;
 	const unsigned int		currentID = GetClientID();
-
-
-	// Get client information
-	currentClient.m_NetSystem.SetSocket( connection.GetSocket() );
-	addrlen = sizeof( clientaddr );
-	getpeername( currentClient.m_NetSystem.GetSocket(), (SOCKADDR*)&clientaddr, &addrlen );
 
 
 	WriteLog( tstring{ _T( "[ Connect client ] : IP address = " ) } + connection.GetConnectionIp() );
 
 	// Initialize server<->client connection
-	currentClient.m_NetSystem.SetID( currentID );
 	if( 0 == currentID )				// failed case
 	{
 		cOPacket oPacket;
 		oPacket.Encode4u( Matchless::FSTC_LOGIN_FAILED );
-		oPacket.Send( currentClient.m_NetSystem.GetSocket() );
+		oPacket.Send( connection.GetSocket() );
 		WriteLog( _T( "[ Error ] : Failed get client ID number" ), { eLogInfoType::LOG_ERROR_HIGH } );
-		closesocket( currentClient.m_NetSystem.GetSocket() );
+		closesocket( connection.GetSocket() );
 		return 0;
 	}
 	else														// succeed case
 	{
-		currentClient.m_PlayerInfo.SetTeamNum( 1 );
-		currentClient.m_PlayerInfo.SetbRoomMaster( DoNeedRoomMaster() );
-		currentClient.m_PlayerInfo.GetCharacterInfo().SetClass( Matchless::ECC_Breaker );
+		std::shared_ptr< MatchlessServer::CClient > pCurrentClient { new MatchlessServer::CClient };
+
+		// Get client information
+		pCurrentClient->m_NetSystem.SetSocket( connection.GetSocket() );
+		addrlen = sizeof( clientaddr );
+		getpeername( pCurrentClient->m_NetSystem.GetSocket(), (SOCKADDR*)&clientaddr, &addrlen );
+
+		pCurrentClient->m_NetSystem.SetID( currentID );
+
+		pCurrentClient->m_PlayerInfo.SetTeamNum( 1 );
+		pCurrentClient->m_PlayerInfo.SetbRoomMaster( DoNeedRoomMaster() );
+		pCurrentClient->m_PlayerInfo.GetCharacterInfo().SetClass( Matchless::ECC_Breaker );
 
 		cOPacket oPacket;
 		oPacket.Encode4u( Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER );
 		oPacket.Encode4u( currentID );
-		oPacket.Encode4u( currentClient.m_PlayerInfo.GetTeamNum() );
-		oPacket.EncodeBool( currentClient.m_PlayerInfo.IsRoomMaster() );
-		oPacket.Encode4u( currentClient.m_PlayerInfo.GetCharacterInfo().GetClass() );
+		oPacket.Encode4u( pCurrentClient->m_PlayerInfo.GetTeamNum() );
+		oPacket.EncodeBool( pCurrentClient->m_PlayerInfo.IsRoomMaster() );
+		oPacket.Encode4u( pCurrentClient->m_PlayerInfo.GetCharacterInfo().GetClass() );
 		{
 			cMonitor::Owner lock{ g_ClientListMonitor };
 			for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 			{
-				oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+				oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 			}
-			g_ClientList.insert( std::map< unsigned int, Matchless::CClient >::value_type( currentID, currentClient ) );
+			g_ClientList.insert( std::map< unsigned int, std::shared_ptr< MatchlessServer::CClient > >::value_type( currentID, pCurrentClient ) );
 		}
 
 		{
 			cMonitor::Owner lock { g_csClientID };
-			g_mClientID.emplace( currentClient.m_NetSystem.GetSocket(), currentID );
+			g_mClientID.emplace( pCurrentClient->m_NetSystem.GetSocket(), currentID );
 		}
 
 		oPacket = cOPacket{};
 		oPacket.Encode4u( Matchless::FSTC_LOGIN_SUCCEED );
 		oPacket.Encode4u( currentID );
-		oPacket.Encode4u( currentClient.m_PlayerInfo.GetTeamNum() );
-		oPacket.EncodeBool( currentClient.m_PlayerInfo.IsRoomMaster() );
-		oPacket.Encode4u( currentClient.m_PlayerInfo.GetCharacterInfo().GetClass() );
-		oPacket.Send( currentClient.m_NetSystem.GetSocket() );
+		oPacket.Encode4u( pCurrentClient->m_PlayerInfo.GetTeamNum() );
+		oPacket.EncodeBool( pCurrentClient->m_PlayerInfo.IsRoomMaster() );
+		oPacket.Encode4u( pCurrentClient->m_PlayerInfo.GetCharacterInfo().GetClass() );
+		oPacket.Send( pCurrentClient->m_NetSystem.GetSocket() );
 
 		oPacket = cOPacket{};
 		oPacket.Encode4u( Matchless::FSTC_MAP_UPDATE );
 		oPacket.Encode4u( g_CurrentMapKind );
-		oPacket.Send( currentClient.m_NetSystem.GetSocket() );
+		oPacket.Send( pCurrentClient->m_NetSystem.GetSocket() );
 
 		ChangeTeamPlayerNum( 0, 1 );
 	}
@@ -84,19 +85,19 @@ DWORD WINAPI ProcessClient_Accept( const cConnection& connection )
 		cMonitor::Owner lock{ g_ClientListMonitor };
 		for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 		{
-			if ( cIter->second.m_NetSystem.GetID() == currentID )
+			if ( cIter->second->m_NetSystem.GetID() == currentID )
 			{
 				continue;
 			}
 
 			cOPacket oPacket;
 			oPacket.Encode4u( Matchless::FSTC_INFORM_ANOTHERCLIENT_ENTER );
-			oPacket.Encode4u( cIter->second.m_NetSystem.GetID() );
-			oPacket.Encode4u( cIter->second.m_PlayerInfo.GetTeamNum() );
-			oPacket.EncodeBool( cIter->second.m_PlayerInfo.IsRoomMaster() );
-			oPacket.Encode4u( cIter->second.m_PlayerInfo.GetCharacterInfo().GetClass() );
+			oPacket.Encode4u( cIter->second->m_NetSystem.GetID() );
+			oPacket.Encode4u( cIter->second->m_PlayerInfo.GetTeamNum() );
+			oPacket.EncodeBool( cIter->second->m_PlayerInfo.IsRoomMaster() );
+			oPacket.Encode4u( cIter->second->m_PlayerInfo.GetCharacterInfo().GetClass() );
 
-			oPacket.Send( currentClient.m_NetSystem.GetSocket() );
+			oPacket.Send( connection.GetSocket() );
 		}
 	}
 
@@ -113,7 +114,7 @@ try {
 	unsigned short int			tempTN;
 	unsigned int				tempTargetID;
 
-	Matchless::CClient*		pClient { nullptr };
+	std::shared_ptr< MatchlessServer::CClient > pClient { nullptr };
 
 	{
 		cMonitor::Owner lock { g_csClientID };
@@ -130,7 +131,7 @@ try {
 		auto it = g_ClientList.find( tempID );
 		if ( it != g_ClientList.end() )
 		{
-			pClient = &it->second;
+			pClient = it->second;
 		}
 	}
 
@@ -186,7 +187,7 @@ try {
 				{
 					if ( cIt->first != tempID )
 					{
-						oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 					}
 				}
 			}
@@ -211,7 +212,7 @@ try {
 				{
 					if ( cIt->first != tempID )
 					{
-						oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 					}
 				}
 			}
@@ -230,7 +231,7 @@ try {
 
 			for ( auto cIt = g_ClientList.begin(); cIt != g_ClientList.end(); ++cIt )
 			{
-				oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+				oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 			}
 		}
 		break;
@@ -252,13 +253,12 @@ try {
 				{
 					tempMtx.Reset();
 
-					tempNum = tempTeamPlayerNum[ cIt->second.m_PlayerInfo.GetTeamNum() ]++;
+					tempNum = tempTeamPlayerNum[ cIt->second->m_PlayerInfo.GetTeamNum() ]++;
 					tempMtx._41 = (float)( ( tempNum % 3 ) * 300 - ( ( tempNum % 3 == 2 ) ? 600 : 0 ) );
-					tempMtx._43 = (float)( ( ( tempNum % 3 ) ? 1500 : 1200 ) * ( ( cIt->second.m_PlayerInfo.GetTeamNum() % 2 ) ? 1 : -1 ) );
+					tempMtx._43 = (float)( ( ( tempNum % 3 ) ? 1500 : 1200 ) * ( ( cIt->second->m_PlayerInfo.GetTeamNum() % 2 ) ? 1 : -1 ) );
 
-					Matchless::InitializeCharacterInfo( cIt->second.m_PlayerInfo.GetCharacterInfo() );
-					cIt->second.m_PlayerInfo.SetTransform( tempMtx );
-					//memcpy( buf + bufIndex, &(cIt->second), sizeof( cIt->second ) );	bufIndex += sizeof( cIt->second );
+					Matchless::InitializeCharacterInfo( cIt->second->m_PlayerInfo.GetCharacterInfo() );
+					cIt->second->m_PlayerInfo.SetTransform( tempMtx );
 				}
 				// Send buf data each client
 				for ( auto cIt = g_ClientList.begin(); cIt != g_ClientList.end(); ++cIt )
@@ -267,13 +267,13 @@ try {
 					{
 						cOPacket oPacket;
 						oPacket.Encode4u( Matchless::FSTC_INFORM_CLIENTINFO );
-						Matchless::Encode( oPacket, cIter->second );
-						oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+						Matchless::Encode( oPacket, *cIter->second );
+						oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 					}
 
 					cOPacket oPacket;
 					oPacket.Encode4u( Matchless::FSTC_GAMESTART_SUCCEED );
-					oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 				}
 			}
 			else
@@ -298,7 +298,7 @@ try {
 			Matchless::Encode( oPacket, tempMatrix );
 
 			cMonitor::Owner lock{ g_ClientListMonitor };
-			if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+			if ( 0 >= g_ClientList[ tempID ]->m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
 				break;
 			}
@@ -306,14 +306,14 @@ try {
 			{
 				cOPacket oPacket;
 				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_CANCEL );
-				oPacket.Send( g_ClientList[ tempID ].m_NetSystem.GetSocket() );
+				oPacket.Send( g_ClientList[ tempID ]->m_NetSystem.GetSocket() );
 			}
-			g_ClientList[ tempID ].m_PlayerInfo.SetTransform( tempMatrix );
+			g_ClientList[ tempID ]->m_PlayerInfo.SetTransform( tempMatrix );
 			for ( auto cIt = g_ClientList.begin(); cIt != g_ClientList.end(); ++cIt )
 			{
 				if ( cIt->first != tempID )
 				{
-					oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -337,7 +337,7 @@ try {
 			}
 
 			cMonitor::Owner lock{ g_ClientListMonitor };
-			if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+			if ( 0 >= g_ClientList[ tempID ]->m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
 				break;
 			}
@@ -345,7 +345,7 @@ try {
 			{
 				if ( cIt->first != tempID )
 				{
-					oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -361,7 +361,7 @@ try {
 					cOPacket oPacket;
 					oPacket.Encode4u( Matchless::FSTC_GAME_MOVE_POSITION );
 					oPacket.Encode4u( cIt->first );
-					Matchless::Encode( oPacket, cIt->second.m_PlayerInfo.GetTransform() );
+					Matchless::Encode( oPacket, cIt->second->m_PlayerInfo.GetTransform() );
 					oPacket.Send( pClient->m_NetSystem.GetSocket() );
 				}
 			}
@@ -373,7 +373,7 @@ try {
 		tempTargetID = iPacket.Decode4u();
 		{
 			cMonitor::Owner lock{ g_ClientListMonitor };
-			if ( 0 >= g_ClientList[ tempID ].m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+			if ( 0 >= g_ClientList[ tempID ]->m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
 				break;
 			}
@@ -381,13 +381,13 @@ try {
 				g_ClientList.end() != g_ClientList.find( tempID ) &&
 				!IsNowCasting( tempID, false ) )
 			{
-				HandleSkillRequest( true, tempECS, g_ClientList[ tempID ], g_ClientList[ tempTargetID ] );
+				HandleSkillRequest( true, tempECS, *g_ClientList[ tempID ], *g_ClientList[ tempTargetID ] );
 			}
 			else
 			{
 				cOPacket oPacket;
 				oPacket.Encode4u( Matchless::FSTC_GAME_SKILL_FAILED );
-				oPacket.Send( g_ClientList[ tempID ].m_NetSystem.GetSocket() );
+				oPacket.Send( g_ClientList[ tempID ]->m_NetSystem.GetSocket() );
 			}
 		}
 		break;
@@ -399,7 +399,7 @@ try {
 			{
 				cOPacket oPacket;
 				oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-				oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+				oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 			}
 			g_IsAcceptable = true;
 		}
@@ -426,13 +426,13 @@ try {
 				{
 					cOPacket oPacket;
 					oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-					oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 				}
 
 				cOPacket oPacket;
 				oPacket.Encode4u( Matchless::FSTC_INFORM_ANOTHERCLIENT_LEAVE );
 				oPacket.Encode4u( tempID );
-				oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+				oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 			}
 			if ( pClient->m_PlayerInfo.IsRoomMaster() && !g_IsAcceptable )
 			{

@@ -13,7 +13,7 @@ cMonitor										g_csClientID;
 
 std::list< unsigned int >						g_ReuseClientIDlist;
 unsigned int									g_LargestClientID = 0;
-std::map< unsigned int, Matchless::CClient >	g_ClientList;			// < ID, SOCKET >
+std::map< unsigned int, std::shared_ptr< MatchlessServer::CClient > >	g_ClientList;			// < ID, SOCKET >
 cMonitor										g_ClientListMonitor;
 std::map< unsigned short int, int >				g_TeamPlayerNumMap;
 bool											g_IsGameStartable = false;
@@ -58,8 +58,7 @@ DWORD WINAPI TimerThread( LPVOID arg )
 				break;
 			}
 
-			HandleSkillRequest(  false,  (Matchless::ECharacterSkill)smIter->second.m_SkillKind,
-									g_ClientList[ smIter->second.m_Caster ],  g_ClientList[ smIter->second.m_Target ]  );
+			HandleSkillRequest( false, static_cast<Matchless::ECharacterSkill>( smIter->second.m_SkillKind ), *g_ClientList[ smIter->second.m_Caster ], *g_ClientList[ smIter->second.m_Target ]  );
 			g_SkillMessageList.erase( smIter );
 		}
 	}
@@ -104,8 +103,8 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 		for( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 		{
 			// remove expired effect
-			auto csIter = cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().begin();
-			while( csIter != cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().end() )
+			auto csIter = cIter->second->m_PlayerInfo.GetCharacterInfo().GetStateList().begin();
+			while( csIter != cIter->second->m_PlayerInfo.GetCharacterInfo().GetStateList().end() )
 			{
 				auto currentCSIter = csIter;
 				++csIter;
@@ -116,7 +115,7 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 					tempCDT = Matchless::ECDT_RemoveState;
 					tempAmount = (unsigned int)currentCSIter->GetType();
 
-					cIter->second.m_PlayerInfo.GetCharacterInfo().GetStateList().erase( currentCSIter );
+					cIter->second->m_PlayerInfo.GetCharacterInfo().GetStateList().erase( currentCSIter );
 
 					cOPacket oPacket;
 					oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
@@ -126,7 +125,7 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 
 					for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 					{
-						oPacket.Send( cIter1->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter1->second->m_NetSystem.GetSocket() );
 					}
 				}
 			}
@@ -134,14 +133,14 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 			// energy recovery
 			if( 0 == currentTick % 60 )
 			{
-				if( cIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy() >= cIter->second.m_PlayerInfo.GetCharacterInfo().GetMaxEnergy() )
+				if( cIter->second->m_PlayerInfo.GetCharacterInfo().GetCurrentEnergy() >= cIter->second->m_PlayerInfo.GetCharacterInfo().GetMaxEnergy() )
 				{
 					continue;
 				}
 
 				tempID = cIter->first;
 				tempCDT = Matchless::ECDT_CurrentEnergy;
-				tempAmount = cIter->second.m_PlayerInfo.GetCharacterInfo().IncreaseCurrentEnergy( 1 );
+				tempAmount = cIter->second->m_PlayerInfo.GetCharacterInfo().IncreaseCurrentEnergy( 1 );
 
 				cOPacket oPacket;
 				oPacket.Encode4u( Matchless::FSTC_GAME_CHAR_UPDATE );
@@ -151,7 +150,7 @@ DWORD WINAPI GameProcessThread( LPVOID arg )
 
 				for( auto cIter1 = g_ClientList.begin() ; cIter1 != g_ClientList.end() ; ++cIter1 )
 				{
-					oPacket.Send( cIter1->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter1->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -237,7 +236,7 @@ bool DoNeedRoomMaster( void )
 	cMonitor::Owner lock{ g_ClientListMonitor };
 	for( auto cIt = g_ClientList.begin() ; cIt != g_ClientList.end() ; ++cIt )
 	{
-		if( cIt->second.m_PlayerInfo.IsRoomMaster() )
+		if( cIt->second->m_PlayerInfo.IsRoomMaster() )
 		{
 			returnValue = false;
 			break;
@@ -287,7 +286,7 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 	auto cIt = g_ClientList.begin();
 	for( ; cIt != g_ClientList.end() ; ++cIt )
 	{
-		if( cIt->second.m_PlayerInfo.IsRoomMaster() )
+		if( cIt->second->m_PlayerInfo.IsRoomMaster() )
 		{
 			break;
 		}
@@ -299,7 +298,7 @@ int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short 
 		cOPacket oPacket;
 		oPacket.Encode4u( Matchless::FSTC_STARTABLE );
 		oPacket.EncodeBool( g_IsGameStartable );
-		oPacket.Send( cIt->second.m_NetSystem.GetSocket() );
+		oPacket.Send( cIt->second->m_NetSystem.GetSocket() );
 	}
 
 	return 0;
@@ -322,14 +321,14 @@ bool IsGameFinish( void )
 
 		for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 		{
-			if ( true == tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] )
+			if ( true == tempRecord[ cIter->second->m_PlayerInfo.GetTeamNum() ] )
 			{
 				continue;
 			}
 
-			if ( 0 < cIter->second.m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
+			if ( 0 < cIter->second->m_PlayerInfo.GetCharacterInfo().GetCurrentHealth() )
 			{
-				tempRecord[ cIter->second.m_PlayerInfo.GetTeamNum() ] = true;
+				tempRecord[ cIter->second->m_PlayerInfo.GetTeamNum() ] = true;
 			}
 		}
 	}
@@ -348,7 +347,7 @@ bool IsGameFinish( void )
 }
 
 
-bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, Matchless::CClient & aCaster, Matchless::CClient & aTarget )
+bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, MatchlessServer::CClient& aCaster, MatchlessServer::CClient& aTarget )
 {
 	unsigned int				bufIndex = 0;
 	unsigned int				buf1Index = 0;
@@ -391,7 +390,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -407,12 +406,12 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					if ( tempIsGameFinish )
 					{
 						cOPacket oPacket;
 						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -447,7 +446,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -472,14 +471,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
 						cOPacket oPacket;
 						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -516,7 +515,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 
 				// cancel target's casting
@@ -557,14 +556,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
 						cOPacket oPacket;
 						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -599,7 +598,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -616,7 +615,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -646,7 +645,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -663,7 +662,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -693,7 +692,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -710,7 +709,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -740,7 +739,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -757,7 +756,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -787,7 +786,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -804,7 +803,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -835,7 +834,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -860,8 +859,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -891,7 +890,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -916,14 +915,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 
 					if ( tempIsGameFinish )
 					{
 						cOPacket oPacket;
 						oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 				if ( tempIsGameFinish )
@@ -980,7 +979,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 
@@ -1004,14 +1003,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 
 						if ( tempIsGameFinish )
 						{
 							cOPacket oPacket;
 							oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-							oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+							oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 						}
 					}
 					if ( tempIsGameFinish )
@@ -1067,7 +1066,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 
@@ -1091,14 +1090,14 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 
 						if ( tempIsGameFinish )
 						{
 							cOPacket oPacket;
 							oPacket.Encode4u( Matchless::FSTC_GAMEOUT );
-							oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+							oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 						}
 					}
 					if ( tempIsGameFinish )
@@ -1134,7 +1133,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 
@@ -1151,7 +1150,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 				cMonitor::Owner lock{ g_ClientListMonitor };
 				for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 				{
-					oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+					oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 				}
 			}
 		}
@@ -1200,7 +1199,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 
@@ -1224,8 +1223,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 			}
@@ -1275,7 +1274,7 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 
@@ -1299,8 +1298,8 @@ bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSki
 					cMonitor::Owner lock{ g_ClientListMonitor };
 					for ( auto cIter = g_ClientList.begin() ; cIter != g_ClientList.end() ; ++cIter )
 					{
-						oPacket.Send( cIter->second.m_NetSystem.GetSocket() );
-						oPacket1.Send( cIter->second.m_NetSystem.GetSocket() );
+						oPacket.Send( cIter->second->m_NetSystem.GetSocket() );
+						oPacket1.Send( cIter->second->m_NetSystem.GetSocket() );
 					}
 				}
 			}

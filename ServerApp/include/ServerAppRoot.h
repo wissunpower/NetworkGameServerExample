@@ -18,6 +18,7 @@
 #include	"MatchlessCState.h"
 
 #include	"MatchlessServerCTimer.h"
+#include	"MatchlessServerCClient.h"
 
 
 
@@ -46,7 +47,7 @@ extern cMonitor										g_csClientID;
 
 extern std::list< unsigned int >						g_ReuseClientIDlist;
 extern unsigned int										g_LargestClientID;
-extern std::map< unsigned int, Matchless::CClient >		g_ClientList;			// < ID, SOCKET >
+extern std::map< unsigned int, std::shared_ptr< MatchlessServer::CClient > >	g_ClientList;			// < ID, SOCKET >
 extern cMonitor											g_ClientListMonitor;
 extern std::map< unsigned short int, int >				g_TeamPlayerNumMap;
 extern bool												g_IsGameStartable;
@@ -68,7 +69,7 @@ bool DoNeedRoomMaster( void );
 int ChangeTeamPlayerNum( const unsigned short int aBefore, const unsigned short int aAfter );
 //bool IsGameStartable( void );
 bool IsGameFinish( void );
-bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, Matchless::CClient & aCaster, Matchless::CClient & aTarget );
+bool HandleSkillRequest( const bool aIsCastStart, const Matchless::ECharacterSkill aSkillKind, MatchlessServer::CClient& aCaster, MatchlessServer::CClient& aTarget );
 bool IsNowCasting( const unsigned int aID, const bool aIsCancel );
 
 bool PrintPacket( const CNetMessage & msg );
