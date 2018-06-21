@@ -182,6 +182,8 @@
   <ItemGroup>
     <ClCompile Include="source\cConnectionManager.cpp" />
     <ClCompile Include="source\cIocpMatchlessServer.cpp" />
+    <ClCompile Include="source\cNetMessageHandlerManager.cpp" />
+    <ClCompile Include="source\cNetMessageHandler_Impl.cpp" />
     <ClCompile Include="source\MatchlessServerCTimer.cpp" />
     <ClCompile Include="source\ServerAppRoot.cpp" />
     <ClCompile Include="source\serverapp_main.cpp" />
@@ -195,6 +197,10 @@
   <ItemGroup>
     <ClInclude Include="include\cConnectionManager.h" />
     <ClInclude Include="include\cIocpMatchlessServer.h" />
+    <ClInclude Include="include\cMatchlessServerException.h" />
+    <ClInclude Include="include\cNetMessageHandlerManager.h" />
+    <ClInclude Include="include\cNetMessageHandler_Impl.h" />
+    <ClInclude Include="include\INetMessageHandler.h" />
     <ClInclude Include="include\MatchlessServerCClient.h" />
     <ClInclude Include="include\MatchlessServerCTimer.h" />
     <ClInclude Include="include\ServerAppRoot.h" />
