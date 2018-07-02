@@ -142,7 +142,8 @@
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetFileName)" "..\ClientApp\bin\$(Configuration)\$(TargetFileName)"
-copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(TargetFileName)"</Command>
+copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(TargetFileName)"
+copy /Y "$(OutDir)$(TargetFileName)" "..\DBServerApp\bin\$(Configuration)\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -162,7 +163,8 @@ copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(Target
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetFileName)" "..\ClientApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"
-copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"
+copy /Y "$(OutDir)$(TargetFileName)" "..\DBServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -186,7 +188,8 @@ copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Platform)\$(Configurati
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetFileName)" "..\ClientApp\bin\$(Configuration)\$(TargetFileName)"
-copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(TargetFileName)"</Command>
+copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(TargetFileName)"
+copy /Y "$(OutDir)$(TargetFileName)" "..\DBServerApp\bin\$(Configuration)\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -210,7 +213,8 @@ copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Configuration)\$(Target
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetFileName)" "..\ClientApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"
-copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+copy /Y "$(OutDir)$(TargetFileName)" "..\ServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"
+copy /Y "$(OutDir)$(TargetFileName)" "..\DBServerApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

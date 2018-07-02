@@ -18,6 +18,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Matchless", "Matchless\Matc
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Library", "Library\Library.vcxproj", "{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBServerApp", "DBServerApp\DBServerApp.vcxproj", "{979D176C-6FB1-4953-BDF1-BC79DE7032DB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C0B5E46F-6C67-4D87-8792-B8C8B96848DA} = {C0B5E46F-6C67-4D87-8792-B8C8B96848DA}
+		{AE683898-1A8C-4B36-86C8-0A8EF7382553} = {AE683898-1A8C-4B36-86C8-0A8EF7382553}
+		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9} = {6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -74,6 +81,14 @@ Global
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|Win32.Build.0 = Release|Win32
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|x64.ActiveCfg = Release|x64
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}.Release|x64.Build.0 = Release|x64
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Debug|Win32.Build.0 = Debug|Win32
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Debug|x64.ActiveCfg = Debug|x64
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Debug|x64.Build.0 = Debug|x64
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|Win32.ActiveCfg = Release|Win32
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|Win32.Build.0 = Release|Win32
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|x64.ActiveCfg = Release|x64
+		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
