@@ -1505,31 +1505,6 @@ int InitLog()
 	return 0;
 }
 
-int WriteLog( const std::initializer_list< tstring >& sl, const std::initializer_list< eLogInfoType >& tl /*= { eLogInfoType::LOG_INFO_LOW }*/ )
-{
-	tstring sLog;
-	for ( auto s : sl )
-	{
-		sLog += s;
-	}
-
-	eLogInfoType eType { eLogInfoType::LOG_NONE };
-	for ( auto t : tl )
-	{
-		eType = eType | t;
-	}
-
-	_tprintf( _T( "%s\n" ), sLog.c_str() );
-	LOG( eType, sl );
-
-	return 0;
-}
-
-int WriteLog( const tstring& s, const std::initializer_list< eLogInfoType >& tl /*= { eLogInfoType::LOG_INFO_LOW }*/ )
-{
-	return WriteLog( { s }, tl );
-}
-
 int CloseLog()
 {
 	CLOSE_LOG();
