@@ -7,6 +7,7 @@
 #include	"cPacket.h"
 #include	"cException.h"
 #include	"cNetMessageHandlerManager.h"
+#include	"cDBServer.h"
 
 
 DWORD WINAPI ProcessClient_Accept( const cConnection& connection )
@@ -263,6 +264,13 @@ int main( int argc, char * argv[] )
 	{
 		WriteLog( _T( "[ Error ] : Failed create thread!" ), { eLogInfoType::LOG_ERROR_HIGH } );
 	}
+
+
+	// Try DB Server Connect.
+	tstring		sDBServerIP { _T( "127.0.0.1" ) };
+	cSingleton< Matchless::cDBServer >::Get()->SetSocket( socket( AF_INET, SOCK_STREAM, 0 ) );
+	auto connectRet = cSingleton< Matchless::cDBServer >::Get()->Connect( AF_INET, MATCHLESS_DBSERVER_PORT, sDBServerIP );
+
 
 	bool bContinue = true;
 	while ( bContinue )

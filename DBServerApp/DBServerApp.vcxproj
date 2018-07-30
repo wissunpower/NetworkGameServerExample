@@ -19,12 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\cIocpMatchlessDBServer.h" />
     <ClInclude Include="include\cMatchlessDBServerException.h" />
+    <ClInclude Include="include\cServerConnectionManager.h" />
     <ClInclude Include="include\cSQLManager.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\cIocpMatchlessDBServer.cpp" />
+    <ClCompile Include="source\cServerConnectionManager.cpp" />
     <ClCompile Include="source\cSQLManager.cpp" />
     <ClCompile Include="source\DBServerApp.cpp" />
     <ClCompile Include="source\stdafx.cpp">

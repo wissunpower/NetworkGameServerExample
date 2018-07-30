@@ -9,6 +9,7 @@
 
 
 #define		MATCHLESS_SERVER_PORT		0xF12E
+#define		MATCHLESS_DBSERVER_PORT		0xF32E
 
 
 
