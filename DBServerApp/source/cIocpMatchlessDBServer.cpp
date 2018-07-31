@@ -14,7 +14,7 @@ bool cIocpMatchlessDBServer::OnAccept( const std::shared_ptr< cConnection >& lpC
 	}
 
 	cSingleton< cServerConnectionManager >::Get()->AddConnection( lpConnection );
-	LOG( eLogInfoType::LOG_INFO_LOW, tstring{ _T( "SYSTEM | cIocpChatServer::OnAccept() | IP[ " ) } + lpConnection->GetConnectionIp() + _T( " ] Socket[ " ) + wsp::to( lpConnection->GetSocket() ) + _T( " ] 立加 UserCnt[ " ) + wsp::to( cSingleton< cServerConnectionManager >::Get()->GetConnectionCnt() ) + _T( " ]" ) );
+	LOG( eLogInfoType::LOG_INFO_LOW, tstring{ _T( "SYSTEM | cIocpMatchlessDBServer::OnAccept() | IP[ " ) } + lpConnection->GetConnectionIp() + _T( " ] Socket[ " ) + wsp::to( lpConnection->GetSocket() ) + _T( " ] 立加 UserCnt[ " ) + wsp::to( cSingleton< cServerConnectionManager >::Get()->GetConnectionCnt() ) + _T( " ]" ) );
 
 	//ProcessClient_Accept( *lpConnection );
 
@@ -50,7 +50,7 @@ void cIocpMatchlessDBServer::OnClose( const std::shared_ptr< cConnection >& lpCo
 	}
 
 	cSingleton< cServerConnectionManager >::Get()->RemoveConnection( lpConnection );
-	LOG( eLogInfoType::LOG_INFO_LOW, tstring{ _T( "SYSTEM | cIocpChatServer::OnClose() | IP[ " ) } + lpConnection->GetConnectionIp() + _T( " ] Socket[ " ) + wsp::to( lpConnection->GetSocket() ) + _T( " ] 立加 辆丰 UserCnt [ " ) + wsp::to( cSingleton< cServerConnectionManager >::Get()->GetConnectionCnt() ) + _T( " ]" ) );
+	LOG( eLogInfoType::LOG_INFO_LOW, tstring{ _T( "SYSTEM | cIocpMatchlessDBServer::OnClose() | IP[ " ) } + lpConnection->GetConnectionIp() + _T( " ] Socket[ " ) + wsp::to( lpConnection->GetSocket() ) + _T( " ] 立加 辆丰 UserCnt [ " ) + wsp::to( cSingleton< cServerConnectionManager >::Get()->GetConnectionCnt() ) + _T( " ]" ) );
 }
 
 bool cIocpMatchlessDBServer::OnSystemMsg( const std::shared_ptr< cConnection >& lpConnection, DWORD dwMsgType, LPARAM lParam )
