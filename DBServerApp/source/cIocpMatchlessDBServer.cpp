@@ -4,6 +4,10 @@
 #include	"cSingleton.h"
 #include	"cLog.h"
 #include	"cServerConnectionManager.h"
+#include	"LogUtil.h"
+#include	"MatchlessProtocol.h"
+#include	"cPacket.h"
+#include	"cNetMessageHandlerManager.h"
 
 
 bool cIocpMatchlessDBServer::OnAccept( const std::shared_ptr< cConnection >& lpConnection )
@@ -20,7 +24,7 @@ bool cIocpMatchlessDBServer::OnAccept( const std::shared_ptr< cConnection >& lpC
 
 	return true;
 }
-
+	
 bool cIocpMatchlessDBServer::OnRecv( const std::shared_ptr< cConnection >& lpConnection, DWORD dwSize, char* pRecvedMsg )
 {
 	return true;
@@ -33,11 +37,13 @@ bool cIocpMatchlessDBServer::OnRecvImmediately( const std::shared_ptr< cConnecti
 		WriteLog( tstring{ _T( "[ Error ] : Invalied Connection Request in OnRecvImmediately()" ) } );
 	}
 
-	//cIPacket iPacket;
-	//iPacket.SetBuffer( dwSize, pRecvedMsg );
-	//iPacket.ResetIndex();
+	cIPacket iPacket;
+	iPacket.SetBuffer( dwSize, pRecvedMsg );
+	iPacket.ResetIndex();
 
-	//ProcessClient_Recv( *lpConnection, iPacket );
+	const Matchless::ENetMessageType nMsgType = static_cast<Matchless::ENetMessageType>( iPacket.Decode4u() );
+
+	cSingleton< cNetMessageHandlerManager >::Get()->OnProcess( nMsgType, *lpConnection, iPacket );
 
 	return true;
 }

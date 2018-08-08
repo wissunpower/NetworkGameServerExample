@@ -21,6 +21,7 @@ public:
 	void Encode8d( const double d );
 	void EncodeStr( const std::string& s );
 	void EncodeStr( const std::wstring& s );
+	void EncodeTM( const tm& data );
 
 	int Send( const SOCKET socket, const int flags = 0 );
 
@@ -46,6 +47,7 @@ public:
 	double Decode8d();
 	std::string DecodeStr( const std::string& s = std::string{} );
 	std::wstring DecodeStr( const std::wstring s = std::wstring{} );
+	tm DecodeTM();
 
 	int Recv( const SOCKET socket, const int flags = 0 );
 

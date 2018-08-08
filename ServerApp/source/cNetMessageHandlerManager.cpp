@@ -39,9 +39,9 @@ int cNetMessageHandlerManager::OnProcess( const Matchless::ENetMessageType nMsgT
 	return RETURN_SUCCEED;
 }
 
-std::shared_ptr< INetMessageHandler > cNetMessageHandlerManager::CreateHandler( const Matchless::ENetMessageType type )
+std::shared_ptr< INetMessageHandler< MatchlessServer::CClient > > cNetMessageHandlerManager::CreateHandler( const Matchless::ENetMessageType type )
 {
-	std::shared_ptr< INetMessageHandler > pHandler{};
+	std::shared_ptr< INetMessageHandler< MatchlessServer::CClient > > pHandler{};
 
 	switch ( type )
 	{

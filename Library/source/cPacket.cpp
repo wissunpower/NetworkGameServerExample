@@ -77,6 +77,11 @@ void cOPacket::EncodeStr( const std::wstring& s )
 	Encode( static_cast<unsigned int>( sizeof( std::wstring::value_type ) * s.length() ), s.c_str() );
 }
 
+void cOPacket::EncodeTM( const tm& data )
+{
+	Encode( sizeof( tm ), &data );
+}
+
 int cOPacket::Send( const SOCKET socket, const int flags /*= 0*/ )
 {
 	memcpy_s( m_vBuffer.data(), PACKET_SIZE_LENGTH, &m_nIndex, PACKET_SIZE_LENGTH );
@@ -174,6 +179,16 @@ std::wstring cIPacket::DecodeStr( const std::wstring s /*= std::wstring{}*/ )
 	void* pData = Decode( sizeof( std::wstring::value_type ) * nStrLen );
 
 	return std::wstring { reinterpret_cast<std::wstring::pointer>( pData ), nStrLen };
+}
+
+tm cIPacket::DecodeTM()
+{
+	unsigned int nDecodeSize = sizeof( tm );
+	void* pData = Decode( nDecodeSize );
+
+	tm data;
+	memcpy_s( &data, nDecodeSize, pData, nDecodeSize );
+	return data;
 }
 
 int cIPacket::Recv( const SOCKET socket, const int flags /*= 0*/ )

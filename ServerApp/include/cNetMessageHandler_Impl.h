@@ -1,12 +1,16 @@
 #pragma once
 
 
-
 #include	"INetMessageHandler.h"
 
 
+namespace MatchlessServer
+{
+	class CClient;
+}
 
-class cMainStepStateUpdateHandler : public INetMessageHandler
+
+class cMainStepStateUpdateHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -15,7 +19,7 @@ public:
 };
 
 
-class cCharacterClassUpdateHandler : public INetMessageHandler
+class cCharacterClassUpdateHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -24,7 +28,7 @@ public:
 };
 
 
-class cTeamUpdateHandler : public INetMessageHandler
+class cTeamUpdateHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -33,7 +37,7 @@ public:
 };
 
 
-class cMapUpdateHandler : public INetMessageHandler
+class cMapUpdateHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -42,7 +46,7 @@ public:
 };
 
 
-class cGameStartRequestHandler : public INetMessageHandler
+class cGameStartRequestHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -51,7 +55,7 @@ public:
 };
 
 
-class cGameMovePositionHandler : public INetMessageHandler
+class cGameMovePositionHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -60,7 +64,7 @@ public:
 };
 
 
-class cGameMoveAnimationHandler : public INetMessageHandler
+class cGameMoveAnimationHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -69,7 +73,7 @@ public:
 };
 
 
-class cGameMoveAllHandler : public INetMessageHandler
+class cGameMoveAllHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -78,7 +82,7 @@ public:
 };
 
 
-class cGameSkillRequestHandler : public INetMessageHandler
+class cGameSkillRequestHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -87,7 +91,7 @@ public:
 };
 
 
-class cChatHandler : public INetMessageHandler
+class cChatHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:
@@ -96,7 +100,7 @@ public:
 };
 
 
-class cGameOutRequestHandler : public INetMessageHandler
+class cGameOutRequestHandler : public INetMessageHandler< MatchlessServer::CClient >
 {
 
 public:

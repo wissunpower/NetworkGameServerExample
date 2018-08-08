@@ -3,6 +3,7 @@
 #include	"ServerAppRoot.h"
 #include	"LibraryDef.h"
 #include	"cPacket.h"
+#include	"LogUtil.h"
 
 
 
@@ -1484,30 +1485,4 @@ bool PrintPacket( const CNetMessage & msg )
 
 
 	return	true;
-}
-
-
-int InitLog()
-{
-	sLogConfig LogConfig;
-	LogConfig.s_eLogFileType = eLogFileType::FILETYPE_TEXT;
-	//LogConfig.s_hWnd = hWnd;
-	LogConfig.s_sLogFileName = _T( "ServerApp" );
-
-	//LogConfig.s_vLogInfoTypes[ static_cast<size_t>( eLogStorageType::STORAGE_OUTPUTWND ) ] = eLogInfoType::LOG_ALL;
-	LogConfig.s_vLogInfoTypes[ static_cast<size_t>( eLogStorageType::STORAGE_FILE ) ] = eLogInfoType::LOG_ALL;
-
-	if ( !INIT_LOG( LogConfig ) )
-	{
-		return 1;
-	}
-
-	return 0;
-}
-
-int CloseLog()
-{
-	CLOSE_LOG();
-
-	return 0;
 }

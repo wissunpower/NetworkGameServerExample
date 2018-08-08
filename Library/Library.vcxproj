@@ -56,6 +56,7 @@
     <ClInclude Include="include\cSingleton.h" />
     <ClInclude Include="include\cThread.h" />
     <ClInclude Include="include\cVBuffer.h" />
+    <ClInclude Include="include\INetMessageHandler.h" />
     <ClInclude Include="include\LibraryDef.h" />
     <ClInclude Include="include\linkopt.h" />
     <ClInclude Include="include\stdafx.h" />

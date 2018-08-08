@@ -4,6 +4,7 @@
 #include	"cLog.h"
 #include	"cSQLManager.h"
 #include	"cMatchlessDBServerException.h"
+#include	"LogUtil.h"
 
 
 #define TRYODBC(h, ht, x)   {   RETCODE rc = x;\

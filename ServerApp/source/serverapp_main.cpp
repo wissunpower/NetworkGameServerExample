@@ -8,6 +8,7 @@
 #include	"cException.h"
 #include	"cNetMessageHandlerManager.h"
 #include	"cDBServer.h"
+#include	"LogUtil.h"
 
 
 DWORD WINAPI ProcessClient_Accept( const cConnection& connection )

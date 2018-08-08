@@ -73,6 +73,12 @@ namespace	Matchless
 		FCTS_LOGOUT_INFORM,						// No exist.
 
 
+		// FSTD : from server to DB server
+		// FDTS : from DB server to server
+
+		FSTD_LOGCOMMON_WRITE,
+
+
 		ENMT_TotalCount
 	};
 }
