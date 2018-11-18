@@ -49,7 +49,7 @@
     <ProjectGuid>{979D176C-6FB1-4953-BDF1-BC79DE7032DB}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>DBServerApp</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
