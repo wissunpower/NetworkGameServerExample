@@ -335,17 +335,9 @@ bool LoadSound( void );
 bool ReleaseSound( void );
 
 
-constexpr Matchless::ECharacterClass VoidPtrToCharacterClass( const void* src )
-{
-	using Type = std::conditional< sizeof( const void * ) == sizeof( unsigned int ), unsigned int, unsigned long long >::type;
-	return static_cast<Matchless::ECharacterClass>( reinterpret_cast<Type>( src ) );
-}
+Matchless::ECharacterClass VoidPtrToCharacterClass( const void* src );
 
-constexpr unsigned short VoidPtrToShort( const void* src )
-{
-	using Type = std::conditional< sizeof( const void * ) == sizeof( unsigned int ), unsigned int, unsigned long long >::type;
-	return static_cast<unsigned short>( reinterpret_cast<Type>( src ) );
-}
+unsigned short VoidPtrToShort( const void* src );
 
 
 

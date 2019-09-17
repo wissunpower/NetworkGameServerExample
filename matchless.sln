@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RD_Graphic", "RD_Graphic\RD_Graphic.vcxproj", "{9677BBB5-0537-4D19-968E-2B28904AEC53}"
 EndProject
@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBServerApp", "DBServerApp\
 		{AE683898-1A8C-4B36-86C8-0A8EF7382553} = {AE683898-1A8C-4B36-86C8-0A8EF7382553}
 		{6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9} = {6F42BCAC-2B8A-4FEF-BB31-5FF4D81BDDA9}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RD_DXUT", "RD_DXUT\RD_DXUT.vcxproj", "{BEACE1F2-31C0-4581-97B6-69376A98E28D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,6 +91,14 @@ Global
 		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|Win32.Build.0 = Release|Win32
 		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|x64.ActiveCfg = Release|x64
 		{979D176C-6FB1-4953-BDF1-BC79DE7032DB}.Release|x64.Build.0 = Release|x64
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Debug|Win32.Build.0 = Debug|Win32
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Debug|x64.ActiveCfg = Debug|x64
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Debug|x64.Build.0 = Debug|x64
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Release|Win32.ActiveCfg = Release|Win32
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Release|Win32.Build.0 = Release|Win32
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Release|x64.ActiveCfg = Release|x64
+		{BEACE1F2-31C0-4581-97B6-69376A98E28D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

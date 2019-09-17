@@ -147,7 +147,7 @@ try {
 	{
 		{
 			cMonitor::Owner lock{ g_csClientID };
-			g_mClientID.erase( tempID );
+			g_mClientID.erase( pClient->m_NetSystem.GetSocket() );
 		}
 
 		{
